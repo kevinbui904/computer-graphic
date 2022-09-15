@@ -37,7 +37,7 @@ functionality of the library 040pixel.o. We also include glfw3.h. */
 #include <stdio.h>
 #include <math.h>
 #include <GLFW/glfw3.h>
-#include "pixel.h"
+#include "040pixel.h"
 
 /* This function is a user interface 'callback'. Once we register it with the
 user interface infrastructure, it is called whenever the user releases a
