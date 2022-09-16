@@ -37,7 +37,7 @@ int main(void)
     /* Clear the window to black. */
     pixClearRGB(0.0, 0.0, 0.0);
 
-    triRender(25, 100, 200, 50, 300, 200, 1.0, 1.0, 1.0);
+    triRender(100, 200, 100, 50, 200, 200, 1.0, 1.0, 1.0);
     /* Run the event loop. The callbacks that were registered above are
     invoked as needed. */
     pixRun();

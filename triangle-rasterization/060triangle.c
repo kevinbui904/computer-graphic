@@ -44,26 +44,65 @@ void triRender(
     if (a0 == b0)
     {
         // horizontal outer loop
-        for (int x0 = ceil(a0); x0 < floor(c0); x0++)
+
+        /*
+            If B is below A, our upper and lower limits will be swapped
+            from if B is above A
+        */
+        if (b1 < a1)
         {
-            int upper = floor(b1 + ((c1 - b1) / (c0 - b0) * (x0 - b0)));
-            int lower = ceil(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x0 = ceil(a0); x0 < floor(c0); x0++)
             {
-                pixSetRGB(x0, x1, r, g, b);
+                int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
+                int lower = ceil(b1 + ((c1 - b1) / (c0 - b0) * (x0 - b0)));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
+            }
+        }
+        else
+        {
+            for (int x0 = ceil(a0); x0 < floor(c0); x0++)
+            {
+                int upper = floor(b1 + ((c1 - b1) / (c0 - b0) * (x0 - b0)));
+                int lower = ceil(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
             }
         }
     }
     else if (a0 == c0)
     {
-        // horizontal outer loop
-        for (int x0 = ceil(a0); x0 < floor(b0); x0++)
+        /*
+            This is the same as the a0 == b0 case
+        */
+        if (c1 < a1)
         {
-            int upper = floor(c1 + ((b1 - c1) / (b0 - c0) * (x0 - c0)));
-            int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
-            for (int x1 = lower; x1 <= upper; x1++)
+            // horizontal outer loop
+            for (int x0 = ceil(a0); x0 < floor(b0); x0++)
             {
-                pixSetRGB(x0, x1, r, g, b);
+                int upper = floor(c1 + ((b1 - c1) / (b0 - c0) * (x0 - c0)));
+                int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
+            }
+        }
+        else
+        {
+            // horizontal outer loop
+            for (int x0 = ceil(a0); x0 < floor(b0); x0++)
+            {
+                int upper = floor(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
+                int lower = ceil(c1 + ((b1 - c1) / (b0 - c0) * (x0 - c0)));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
             }
         }
     }
