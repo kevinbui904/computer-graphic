@@ -9,52 +9,38 @@
  *
  */
 
-void triRender(
+/*
+    Helper functin for triRender
+    This is where we actually handle the rendering,
+    triRender only forces "A" to be the left most point
+*/
+void triRenderALeft(
     double a0, double a1, double b0, double b1, double c0, double c1,
     double r, double g, double b)
 {
 
     /*
-    Whenever a is not left most, it messes with our algorithm a bit,
-    so we'll detect it and make it left most
-
-    We'll just keep swapping the points around until a0 is left most
+    There's two major cases we'll have to worry about.
+    Namely, when B is to the left C and when B is to
+    the right of C
     */
 
-    //    while ((a0 > b0) || (a0 > c0))
-    //    {
-    //         double temp0 = c0;
-    //         double temp1 = c1;
-
-    //         c0 = temp0;
-    //         c1 = temp1;
-
-    //    }
-    /*
-        whenever a0 = b0, a0 = c0, or b0 = a0, we'll have a division by 0
-        error, so we just have to handle these differently
-    */
-
-    /*
-        For the first three cases, at least 2 of the points
-        are on a vertical line, so we only need to draw
-        1/2 of our triangle
-    */
-
-    if (a0 == b0)
+    if (b0 < c0)
     {
-        // horizontal outer loop
 
         /*
-            If B is below A, our upper and lower limits will be swapped
-            from if B is above A
+        We'll have to handle the division by 0 cases
+
+        Note: we don't have to handle a0 = c0 and b0 = c0
+        here because of counter-clockwise ness. In these cases,
+        B will be to the right C
         */
-        if (b1 < a1)
+        if (a0 == b0)
         {
-            for (int x0 = ceil(a0); x0 < floor(c0); x0++)
+            for (int x0 = ceil(b0); x0 <= floor(c0); x0++)
             {
                 int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
-                int lower = ceil(b1 + ((c1 - b1) / (c0 - b0) * (x0 - b0)));
+                int lower = ceil(b1 + ((c1 - b1) / (c0 - b0)) * (x0 - b0));
                 for (int x1 = lower; x1 <= upper; x1++)
                 {
                     pixSetRGB(x0, x1, r, g, b);
@@ -63,10 +49,23 @@ void triRender(
         }
         else
         {
-            for (int x0 = ceil(a0); x0 < floor(c0); x0++)
+            // first half the triangle, we run to b0
+            for (int x0 = ceil(a0); x0 <= floor(b0); x0++)
             {
-                int upper = floor(b1 + ((c1 - b1) / (c0 - b0) * (x0 - b0)));
-                int lower = ceil(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
+
+                int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
+                int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
+            }
+
+            // for the second half, we run from b0+1 to c0
+            for (int x0 = floor(b0) + 1; x0 <= floor(c0); x0++)
+            {
+                int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
+                int lower = ceil(b1 + ((c1 - b1) / (c0 - b0)) * (x0 - b0));
                 for (int x1 = lower; x1 <= upper; x1++)
                 {
                     pixSetRGB(x0, x1, r, g, b);
@@ -74,17 +73,31 @@ void triRender(
             }
         }
     }
-    else if (a0 == c0)
+
+    else
     {
         /*
-            This is the same as the a0 == b0 case
+        There are two division by 0 cases here
         */
-        if (c1 < a1)
+
+        if (a0 == c0)
         {
-            // horizontal outer loop
-            for (int x0 = ceil(a0); x0 < floor(b0); x0++)
+            for (int x0 = ceil(a0); x0 <= floor(b0); x0++)
             {
-                int upper = floor(c1 + ((b1 - c1) / (b0 - c0) * (x0 - c0)));
+                int upper = floor(c1 + ((b1 - c1) / (b0 - c0)) * (x0 - c0));
+                int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
+            }
+        }
+
+        else if (c0 == b0)
+        {
+            for (int x0 = ceil(a0); x0 <= floor(b0); x0++)
+            {
+                int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
                 int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
                 for (int x1 = lower; x1 <= upper; x1++)
                 {
@@ -94,11 +107,22 @@ void triRender(
         }
         else
         {
-            // horizontal outer loop
-            for (int x0 = ceil(a0); x0 < floor(b0); x0++)
+            // first half of the triangle
+            for (int x0 = ceil(a0); x0 <= floor(c0); x0++)
             {
-                int upper = floor(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
-                int lower = ceil(c1 + ((b1 - c1) / (b0 - c0) * (x0 - c0)));
+                int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
+                int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
+                for (int x1 = lower; x1 <= upper; x1++)
+                {
+                    pixSetRGB(x0, x1, r, g, b);
+                }
+            }
+
+            // second half of the triangle
+            for (int x0 = floor(c0) + 1; x0 <= floor(b0); x0++)
+            {
+                int upper = floor(c1 + ((b1 - c1) / (b0 - c0)) * (x0 - c0));
+                int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
                 for (int x1 = lower; x1 <= upper; x1++)
                 {
                     pixSetRGB(x0, x1, r, g, b);
@@ -106,31 +130,24 @@ void triRender(
             }
         }
     }
+}
+
+/*
+Makes A the left most point,
+according to Josh this reduces our code by
+about 1/3
+*/
+void triRender(double a0, double a1, double b0, double b1, double c0, double c1,
+               double r, double g, double b)
+{
+    printf("Triangle coord: A(%f,%f); B(%f,%f); C(%f,%f)\n", a0, a1, b0, b1, c0, c1);
+    if (a0 <= b0 && a0 <= c0)
+        triRenderALeft(a0, a1, b0, b1, c0, c1,
+                       r, g, b);
+    else if (b0 <= c0 && b0 <= a0)
+        triRenderALeft(b0, b1, c0, c1, a0, a1,
+                       r, g, b);
     else
-    {
-        // first half of the triangle
-        for (int x0 = ceil(a0); x0 <= floor(c0); x0++)
-        {
-            int upper = floor(a1 + ((c1 - a1) / (c0 - a0)) * (x0 - a0));
-            int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
-            for (int x1 = lower; x1 <= upper; x1++)
-            {
-                pixSetRGB(x0, x1, r, g, b);
-            }
-        }
-
-        // second half of the triangle
-        for (int x0 = floor(c0) + 1; x0 <= floor(b0); x0++)
-        {
-            int upper = floor(c1 + ((b1 - c1) / (b0 - c0)) * (x0 - c0));
-            int lower = ceil(a1 + ((b1 - a1) / (b0 - a0)) * (x0 - a0));
-            for (int x1 = lower; x1 <= upper; x1++)
-            {
-                pixSetRGB(x0, x1, r, g, b);
-            }
-        }
-        printf("this case is normal\n");
-    }
-
-    // double upper = a1 + ((b1-a1) / (b0 - a0))*(x0 - a0)
+        triRenderALeft(c0, c1, a0, a1, b0, b1,
+                       r, g, b);
 }
