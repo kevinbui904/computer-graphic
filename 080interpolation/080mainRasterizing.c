@@ -14,12 +14,15 @@
 #include <math.h>
 #include <GLFW/glfw3.h>
 #include "040pixel.h"
-#include "060triangle.c"
+#include "080triangle.c"
 
 /*
     Global to cycle through the 12 triangles that need to be rendered
 */
 int triNum = 1;
+
+// global RGB
+double rgb[3] = {1.0, 1.0, 1.0};
 
 /*
 Handle keyboard input for demo
@@ -27,53 +30,124 @@ Handle keyboard input for demo
 void handleKeyUp(int key, int shiftIsDown, int controlIsDown,
                  int altOptionIsDown, int superCommandIsDown)
 {
+    double a[2], b[2], c[2];
+
     if (key == GLFW_KEY_ENTER)
     {
         pixClearRGB(0.0, 0.0, 0.0);
         switch (triNum)
         {
         case 1:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 300;
+            b[1] = 100;
+            c[0] = 50;
+            c[1] = 300;
 
             printf("case 1\n");
-            triRender(50, 100, 300, 100, 50, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 2:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 300;
+            b[1] = 100;
+            c[0] = 150;
+            c[1] = 300;
+
             printf("case 2\n");
-            triRender(50, 100, 300, 100, 150, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 3:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 300;
+            b[1] = 100;
+            c[0] = 300;
+            c[1] = 300;
+
             printf("case 3\n");
-            triRender(50, 100, 300, 100, 300, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 4:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 300;
+            b[1] = 100;
+            c[0] = 300;
+            c[1] = 300;
+
             printf("case 4\n");
             printf("\tshould be the same as case 3, switchin up points\n");
-            triRender(300, 300, 50, 100, 300, 100, 1.0, 1.0, 1.0);
+            triRender(b, c, a, rgb);
             break;
         case 5:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 300;
+            b[1] = 100;
+            c[0] = 300;
+            c[1] = 300;
+
             printf("case 5\n");
             printf("\tshould be the same as case 3, switchin up points\n");
-            triRender(300, 100, 300, 300, 50, 100, 1.0, 1.0, 1.0);
+            triRender(c, a, b, rgb);
             break;
         case 6:
+            a[0] = 50;
+            a[1] = 300;
+            b[0] = 300;
+            b[1] = 150;
+            c[0] = 300;
+            c[1] = 300;
+
             printf("case 6\n");
-            triRender(50, 300, 300, 150, 300, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 7:
+            a[0] = 50;
+            a[1] = 300;
+            b[0] = 150;
+            b[1] = 50;
+            c[0] = 300;
+            c[1] = 300;
+
             printf("case 7\n");
-            triRender(50, 300, 150, 50, 300, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 8:
+            a[0] = 50;
+            a[1] = 200;
+            b[0] = 50;
+            b[1] = 50;
+            c[0] = 300;
+            c[1] = 200;
+
             printf("case 8\n");
-            triRender(50, 200, 50, 50, 300, 200, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 9:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 300;
+            b[1] = 50;
+            c[0] = 150;
+            c[1] = 300;
+
             printf("case 9\n");
-            triRender(50, 100, 300, 50, 150, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         case 10:
+            a[0] = 50;
+            a[1] = 100;
+            b[0] = 150;
+            b[1] = 50;
+            c[0] = 300;
+            c[1] = 300;
+
             printf("case 10\n");
-            triRender(50, 100, 150, 50, 300, 300, 1.0, 1.0, 1.0);
+            triRender(a, b, c, rgb);
             break;
         default:
             printf("That's all for the demo folks, hope I didn't miss any cases\n");

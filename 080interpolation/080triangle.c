@@ -1,9 +1,9 @@
 /**
- * @file 060triangle.c
+ * @file 080triangle.c
  * @author Thien K. M. Bui <buik@carleton.edu>
- * @brief triangle rasterizing algorithms
+ * @brief triangle rasterizing algorithms, but with arrays
  * @version 0.1
- * @date 2022-09-16
+ * @date 2022-09-18
  *
  * @copyright Copyright (c) 2022
  *
@@ -137,17 +137,18 @@ Makes A the left most point,
 according to Josh this reduces our code by
 about 1/3
 */
-void triRender(double a0, double a1, double b0, double b1, double c0, double c1,
-               double r, double g, double b)
+void triRender(
+    const double a[2], const double b[2], const double c[2],
+    const double rgb[3])
 {
-    printf("Triangle coord: A(%f,%f); B(%f,%f); C(%f,%f)\n", a0, a1, b0, b1, c0, c1);
-    if (a0 <= b0 && a0 <= c0)
-        triRenderALeft(a0, a1, b0, b1, c0, c1,
-                       r, g, b);
-    else if (b0 <= c0 && b0 <= a0)
-        triRenderALeft(b0, b1, c0, c1, a0, a1,
-                       r, g, b);
+    printf("Triangle coord: A(%f,%f); B(%f,%f); C(%f,%f)\n", a[0], a[1], b[0], b[1], c[0], c[1]);
+    if (a[0] <= b[0] && a[0] <= c[0])
+        triRenderALeft(a[0], a[1], b[0], b[1], c[0], c[1],
+                       rgb[0], rgb[1], rgb[2]);
+    else if (b[0] <= c[0] && b[0] <= a[0])
+        triRenderALeft(b[0], b[1], c[0], c[1], a[0], a[1],
+                       rgb[0], rgb[1], rgb[2]);
     else
-        triRenderALeft(c0, c1, a0, a1, b0, b1,
-                       r, g, b);
+        triRenderALeft(c[0], c[1], a[0], a[1], b[0], b[1],
+                       rgb[0], rgb[1], rgb[2]);
 }
