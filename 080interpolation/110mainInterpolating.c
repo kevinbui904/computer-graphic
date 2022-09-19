@@ -21,14 +21,15 @@ double angle = 0.0;
 
 double alpha[3] = {1.0, 0.0, 0.0};
 double beta[3] = {0.0, 1.0, 0.0};
-double gam[3] = {0.0, 1.0, 0.0};
+double gam[3] = {0.0, 0.0, 1.0};
 
 void handleTimeStep(double oldTime, double newTime)
 {
     if (floor(newTime) - floor(oldTime) >= 1.0)
         printf("handleTimeStep: %f frames/sec\n", 1.0 / (newTime - oldTime));
     double transl[2] = {256.0, 256.0};
-    double aa[2], bb[2], cc[2], rrggbb[3], rot[2][2];
+    double aa[2], bb[2], cc[2], rot[2][2];
+    double rrggbb[3] = {1.0, 1.0, 1.0};
     angle += (newTime - oldTime) / 10.0;
     mat22Rotation(angle, rot);
     mat221Multiply(rot, a, aa);
@@ -37,9 +38,9 @@ void handleTimeStep(double oldTime, double newTime)
     vecAdd(2, transl, aa, aa);
     vecAdd(2, transl, bb, bb);
     vecAdd(2, transl, cc, cc);
-    vecScale(3, (2.0 + sin(newTime)) / 3.0, rgb, rrggbb);
+    // vecScale(3, (2.0 + sin(newTime)) / 3.0, rgb, rrggbb);
     pixClearRGB(0.0, 0.0, 0.0);
-    triRender(aa, bb, cc, rrggbb, alpha, beta, gam);
+    triRender(aa, bb, cc, rgb, alpha, beta, gam);
 }
 
 int main(void)
@@ -49,8 +50,8 @@ int main(void)
     double C[2] = {400, 150};
     if (pixInitialize(512, 512, "Testing") != 0)
         return 1;
-    // pixSetTimeStepHandler(handleTimeStep);
-    triRender(A, B, C, rgb, alpha, beta, gam);
+    pixSetTimeStepHandler(handleTimeStep);
+    // triRender(A, B, C, rgb, alpha, beta, gam);
     pixRun();
     pixFinalize();
     return 0;
