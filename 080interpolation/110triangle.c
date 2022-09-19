@@ -19,16 +19,25 @@ void calculateRBG(const double d, const double chi[3], const double rgb[3], doub
     vecModulate(d, chi, rgb, modulatedRGB);
     if (modulatedRGB[0] < 0)
     {
-        modulatedRGB[0] = -modulatedRGB[0];
+        printf("chir: %f,%f,%f\n", chi[0], chi[1], chi[2]);
+        printf("rgb:%f,%f,%f\n", rgb[0], rgb[1], rgb[2]);
+        printf("modulated: %f,%f,%f\n", modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
+        exit(1);
     }
 
     if (modulatedRGB[1] < 0)
     {
-        modulatedRGB[1] = -modulatedRGB[1];
+        printf("chir: %f,%f,%f\n", chi[0], chi[1], chi[2]);
+        printf("rgb:%f,%f,%f\n", rgb[0], rgb[1], rgb[2]);
+        printf("modulated: %f,%f,%f\n", modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
+        exit(1);
     }
     if (modulatedRGB[2] < 0)
     {
-        modulatedRGB[2] = -modulatedRGB[2];
+        printf("chir: %f,%f,%f\n", chi[0], chi[1], chi[2]);
+        printf("rgb:%f,%f,%f\n", rgb[0], rgb[1], rgb[2]);
+        printf("modulated: %f,%f,%f\n", modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
+        exit(1);
     }
 }
 /*
@@ -41,6 +50,12 @@ void findVectPQ(const double a[2], const double x[2], const double invMatrixA[2]
     double xMinusA[2];
     vecSubtract(2, x, a, xMinusA);
     mat221Multiply(invMatrixA, xMinusA, vectPQ);
+    mat22Print(invMatrixA);
+    printf("A: %f, %f\n", a[0], a[1]);
+
+    printf("x: %f, %f\n", x[0], x[1]);
+
+    printf("xMinusA: %f, %f\n", xMinusA[0], xMinusA[1]);
 }
 
 /*
@@ -50,7 +65,7 @@ void interpolate(const double alpha[3], const double betMinAlp[3], const double 
 {
     // set chi to be alpha
     vec3Set(alpha[0], alpha[1], alpha[2], chi);
-
+    printf("alpha: %f,%f,%f\n", alpha[0], alpha[1], alpha[2]);
     double qGamMinAlp[3], pBetMinAlp[3];
 
     // printf("vecSubtract: %f,%f,%f\n", betMinAlp[0], betMinAlp[1], betMinAlp[2]);
@@ -58,8 +73,9 @@ void interpolate(const double alpha[3], const double betMinAlp[3], const double 
 
     vecScale(3, vectPQ[0], betMinAlp, pBetMinAlp);
     vecScale(3, vectPQ[1], gamMinAlp, qGamMinAlp);
-    // printf("interpolate: %f,%f,%f\n", pBetMinAlp[0], pBetMinAlp[1], pBetMinAlp[2]);
-    // printf("qGamMinAlp: %f,%f,%f, Q: %f\n", qGamMinAlp[0], qGamMinAlp[1], qGamMinAlp[2], vectPQ[1]);
+
+    printf("pBetMinAlp: %f,%f,%f, P: %f\n", pBetMinAlp[0], pBetMinAlp[1], pBetMinAlp[2], vectPQ[0]);
+    printf("qGamMinAlp: %f,%f,%f, Q: %f\n", qGamMinAlp[0], qGamMinAlp[1], qGamMinAlp[2], vectPQ[1]);
 
     // not adding alpha again because chi starts off with alpha's values
     vecAdd(3, chi, pBetMinAlp, chi);
@@ -114,6 +130,8 @@ void triRenderALeft(
 
     vecSubtract(3, beta, alpha, betMinAlp);
     vecSubtract(3, gamma, alpha, gamMinAlp);
+    printf("betMinAlp: %f,%f,%f, \n", betMinAlp[0], betMinAlp[1], betMinAlp[2]);
+    printf("gamMinAlp: %f,%f,%f, \n", gamMinAlp[0], gamMinAlp[1], gamMinAlp[2]);
 
     /*
     There's two major cases we'll have to worry about.

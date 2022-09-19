@@ -22,7 +22,7 @@
 int triNum = 1;
 
 // global RGB
-double rgb[3] = {1.0, 1.0, 1.0};
+double rgb[3] = {1.0, -0.5, 0.0};
 
 /*
 Handle keyboard input for demo

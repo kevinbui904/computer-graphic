@@ -50,8 +50,8 @@ int main(void)
     double C[2] = {400, 150};
     if (pixInitialize(512, 512, "Testing") != 0)
         return 1;
-    pixSetTimeStepHandler(handleTimeStep);
-    // triRender(A, B, C, rgb, alpha, beta, gam);
+    // pixSetTimeStepHandler(handleTimeStep);
+    triRender(A, B, C, rgb, alpha, beta, gam);
     pixRun();
     pixFinalize();
     return 0;
