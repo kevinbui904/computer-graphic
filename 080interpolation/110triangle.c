@@ -10,6 +10,28 @@
  */
 
 /*
+to make sure that RBG value is never negative
+*/
+
+void calculateRBG(const double d, const double chi[3], const double rgb[3], double modulatedRGB[3])
+{
+    vecModulate(3, chi, rgb, modulatedRGB);
+    if (modulatedRGB[0] < 0)
+    {
+        // printf("Here: \n")
+        modulatedRGB[0] = 0;
+    }
+
+    if (modulatedRGB[1] < 0)
+    {
+        modulatedRGB[1] = 0;
+    }
+    if (modulatedRGB[2] < 0)
+    {
+        modulatedRGB[2] = 0;
+    }
+}
+/*
 findVectPQ:
     find p, q that will be used to calculate chi in interpolation
     check interpolation note for formula of matrix A
@@ -21,6 +43,9 @@ void findVectPQ(const double a[2], const double x[2], const double invMatrixA[2]
     mat221Multiply(invMatrixA, xMinusA, vectPQ);
 }
 
+/*
+Calculate chi
+*/
 void interpolate(const double alpha[3], const double beta[3], const double gamma[3], const double vectPQ[2], double chi[3])
 {
     // set chi to be alpha
@@ -69,6 +94,8 @@ void triRenderALeft(
     mat22Columns(col0, col1, matrixA);
     det = mat22Invert(matrixA, invMatrixA);
 
+    // if det is 0, then our matrix is not invertible,
+    // just quit the program for now
     if (det == 0)
     {
         mat22Print(invMatrixA);
@@ -111,7 +138,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -130,7 +157,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -146,7 +173,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -171,7 +198,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -189,7 +216,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -207,7 +234,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -223,7 +250,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, beta, gamma, vectPQ, chi);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    calculateRBG(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }

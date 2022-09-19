@@ -44,9 +44,13 @@ void handleTimeStep(double oldTime, double newTime)
 
 int main(void)
 {
+    double A[2] = {100, 400};
+    double B[2] = {200, 100};
+    double C[2] = {400, 150};
     if (pixInitialize(512, 512, "Testing") != 0)
         return 1;
-    pixSetTimeStepHandler(handleTimeStep);
+    // pixSetTimeStepHandler(handleTimeStep);
+    triRender(A, B, C, rgb, alpha, beta, gam);
     pixRun();
     pixFinalize();
     return 0;
