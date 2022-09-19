@@ -19,7 +19,6 @@ CANNOT safely alias the input. */
 double mat22Invert(const double m[2][2], double mInv[2][2])
 {
     double det = m[0][0] * m[1][1] - m[0][1] * m[1][0];
-
     if (det == 0)
     {
         return det;
@@ -46,8 +45,8 @@ input. */
 void mat22Columns(const double col0[2], const double col1[2], double m[2][2])
 {
     m[0][0] = col0[0];
-    m[0][1] = col0[1];
-    m[1][0] = col1[0];
+    m[0][1] = col1[0];
+    m[1][0] = col0[1];
     m[1][1] = col1[1];
 }
 
