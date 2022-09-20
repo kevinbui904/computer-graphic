@@ -9,7 +9,6 @@
  *
  */
 
-#include "140texture.c"
 /*
 findVectPQ:
     find p, q that will be used to calculate chi in interpolation
@@ -85,11 +84,11 @@ void triRenderALeft(
     // betaMinusAlpha and gammaMinutesAlpha
     // are used to calculate chi later
     double x[2];
-    double chi[2], betMinAlp[2], gamMinAlp[2], modulatedRGB[2], sample[3];
+    double chi[2], betMinAlp[2], gamMinAlp[2], modulatedRGB[3], sample[3];
     double vectPQ[2];
 
-    vecSubtract(3, beta, alpha, betMinAlp);
-    vecSubtract(3, gamma, alpha, gamMinAlp);
+    vecSubtract(2, beta, alpha, betMinAlp);
+    vecSubtract(2, gamma, alpha, gamMinAlp);
 
     /*
     There's two major cases we'll have to worry about.
@@ -119,7 +118,7 @@ void triRenderALeft(
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -139,8 +138,7 @@ void triRenderALeft(
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
-
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -157,8 +155,7 @@ void triRenderALeft(
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
-
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -185,7 +182,7 @@ void triRenderALeft(
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
 
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -204,8 +201,7 @@ void triRenderALeft(
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
-
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -224,8 +220,7 @@ void triRenderALeft(
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
-
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }
@@ -242,7 +237,7 @@ void triRenderALeft(
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
                     texSample(tex, chi[0], chi[1], sample);
-                    vecModulate(3, chi, rgb, modulatedRGB);
+                    vecModulate(3, sample, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
             }

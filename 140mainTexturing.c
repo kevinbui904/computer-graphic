@@ -16,18 +16,23 @@
 
 #include "080vector.c"
 #include "100matrix.c"
-#include "140triangle.c"
 #include "140texture.c"
+#include "140triangle.c"
+
 
 double a[2] = {144.0, -156.0};
 double b[2] = {244.0, 244.0};
 double c[2] = {-226.0, -226.0};
-double rgb[3] = {1.0, 1.0, 0.0};
+double rgb[3] = {1.0, 1.0, 1.0};
 double angle = 0.0;
 
-double alpha[3] = {1.0, 0.0, 0.0};
-double beta[3] = {0.0, 1.0, 0.0};
-double gam[3] = {0.0, 0.0, 1.0};
+double alpha[2] = {1.0, 0.0};
+double beta[2] = {0.0, 1.0};
+double gam[2] = {1.0, 1.0};
+
+double A[2] = {0, 0};
+double B[2] = {512, 0};
+double C[2] = {0, 512};
 
 void handleTimeStep(double oldTime, double newTime)
 {
@@ -37,22 +42,13 @@ void handleTimeStep(double oldTime, double newTime)
 
 int main(void)
 {
-    double A[2] = {100, 400};
-    double B[2] = {200, 100};
-    double C[2] = {400, 150};
+
     if (pixInitialize(512, 512, "Testing") != 0)
         return 1;
-    //     int texelDim;      /* e.g. 3 for RGB textures */
-    // int filtering;     /* texLINEAR or texNEAREST */
-    // int topBottom;     /* texREPEAT or texCLIP */
-    // int leftRight;     /* texREPEAT or texCLIP */
-    // double *data;
-    // double *data;
-    double *data;
-    texTexture newTexture = {
-        512, 512, 3, texLINEAR, texREPEAT, texREPEAT, data};
+
+    texTexture newTexture;
     texInitializeFile(&newTexture, "./140imageCat.jpg");
-    triRender(A, B, C, rgb, &newTexture, A, B, C);
+    triRender(A, B, C, rgb, &newTexture, alpha, beta, gam);
     pixSetTimeStepHandler(handleTimeStep);
     pixRun();
     texFinalize(&newTexture);
