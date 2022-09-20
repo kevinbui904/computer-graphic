@@ -16,7 +16,7 @@
 
 #include "080vector.c"
 #include "100matrix.c"
-#include "110triangle.c"
+#include "140triangle.c"
 #include "140texture.c"
 
 double a[2] = {144.0, -156.0};
@@ -33,20 +33,6 @@ void handleTimeStep(double oldTime, double newTime)
 {
     if (floor(newTime) - floor(oldTime) >= 1.0)
         printf("handleTimeStep: %f frames/sec\n", 1.0 / (newTime - oldTime));
-    double transl[2] = {256.0, 256.0};
-    double aa[2], bb[2], cc[2], rot[2][2];
-    double rrggbb[3] = {1.0, 1.0, 1.0};
-    angle += (newTime - oldTime) / 10.0;
-    mat22Rotation(angle, rot);
-    mat221Multiply(rot, a, aa);
-    mat221Multiply(rot, b, bb);
-    mat221Multiply(rot, c, cc);
-    vecAdd(2, transl, aa, aa);
-    vecAdd(2, transl, bb, bb);
-    vecAdd(2, transl, cc, cc);
-    vecScale(3, (2.0 + sin(newTime)) / 3.0, rgb, rrggbb);
-    pixClearRGB(0.0, 0.0, 0.0);
-    triRender(aa, bb, cc, rrggbb, alpha, beta, gam);
 }
 
 int main(void)
@@ -56,8 +42,20 @@ int main(void)
     double C[2] = {400, 150};
     if (pixInitialize(512, 512, "Testing") != 0)
         return 1;
+    //     int texelDim;      /* e.g. 3 for RGB textures */
+    // int filtering;     /* texLINEAR or texNEAREST */
+    // int topBottom;     /* texREPEAT or texCLIP */
+    // int leftRight;     /* texREPEAT or texCLIP */
+    // double *data;
+    // double *data;
+    double *data;
+    texTexture newTexture = {
+        512, 512, 3, texLINEAR, texREPEAT, texREPEAT, data};
+    texInitializeFile(&newTexture, "./140imageCat.jpg");
+    triRender(A, B, C, rgb, &newTexture, A, B, C);
     pixSetTimeStepHandler(handleTimeStep);
     pixRun();
+    texFinalize(&newTexture);
     pixFinalize();
     return 0;
 }

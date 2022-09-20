@@ -1,5 +1,3 @@
-
-
 /*** Public: For header file ***/
 
 /* These are constants that are set at compile time. For example, whenever the

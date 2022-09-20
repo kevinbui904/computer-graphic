@@ -1,7 +1,7 @@
 /**
- * @file 110triangle.c
+ * @file 140triangle.c
  * @author Thien K. M. Bui <buik@carleton.edu>
- * @brief triangle interpolation + rasterizing algorithm
+ * @brief triangle interpolation + rasterizing + texture mapping
  * @version 0.1
  * @date 2022-09-19
  *
@@ -10,6 +10,36 @@
  */
 
 #include "140texture.c"
+/*
+findVectPQ:
+    find p, q that will be used to calculate chi in interpolation
+    check interpolation note for formula of matrix A
+*/
+void findVectPQ(const double a[2], const double x[2], const double invMatrixA[2][2], double vectPQ[2])
+{
+    double xMinusA[2];
+    vecSubtract(2, x, a, xMinusA);
+    mat221Multiply(invMatrixA, xMinusA, vectPQ);
+}
+
+/*
+    Calculate chi
+*/
+void interpolate(const double alpha[2], const double betMinAlp[2], const double gamMinAlp[2], const double vectPQ[2], double chi[3])
+{
+    double qGamMinAlp[2], pBetMinAlp[2];
+
+    vecScale(2, vectPQ[0], betMinAlp, pBetMinAlp);
+    vecScale(2, vectPQ[1], gamMinAlp, qGamMinAlp);
+
+    // setting alpha to chi, neccessary since we're reusing
+    // the array chi everytime we call interpolate
+    chi[0] = alpha[0];
+    chi[1] = alpha[1];
+
+    vecAdd(2, chi, pBetMinAlp, chi);
+    vecAdd(2, chi, qGamMinAlp, chi);
+}
 
 /*
     Helper functin for triRender
@@ -18,8 +48,8 @@
 */
 void triRenderALeft(
     const double A[2], const double B[2], const double C[2],
-    const double rgb[3], const double alpha[3], const double beta[3],
-    const double gamma[3])
+    const double rgb[3], const texTexture *tex, const double alpha[2], const double beta[2],
+    const double gamma[2])
 {
 
     // rebinding so formulas are a bit easier to see
@@ -51,6 +81,16 @@ void triRenderALeft(
         exit(1);
     }
 
+    // reserving memories for x and chi
+    // betaMinusAlpha and gammaMinutesAlpha
+    // are used to calculate chi later
+    double x[2];
+    double chi[2], betMinAlp[2], gamMinAlp[2], modulatedRGB[2], sample[3];
+    double vectPQ[2];
+
+    vecSubtract(3, beta, alpha, betMinAlp);
+    vecSubtract(3, gamma, alpha, gamMinAlp);
+
     /*
     There's two major cases we'll have to worry about.
     Namely, when B is to the left C and when B is to
@@ -77,7 +117,8 @@ void triRenderALeft(
                     x[0] = x0;
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
-                    // interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -97,6 +138,8 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
+
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -113,6 +156,8 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
+
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -138,6 +183,8 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
+
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -156,6 +203,8 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
+
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -174,6 +223,8 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
+
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -190,6 +241,7 @@ void triRenderALeft(
                     x[1] = x1;
                     findVectPQ(A, x, invMatrixA, vectPQ);
                     interpolate(alpha, betMinAlp, gamMinAlp, vectPQ, chi);
+                    texSample(tex, chi[0], chi[1], sample);
                     vecModulate(3, chi, rgb, modulatedRGB);
                     pixSetRGB(x0, x1, modulatedRGB[0], modulatedRGB[1], modulatedRGB[2]);
                 }
@@ -205,19 +257,19 @@ about 1/3
 */
 void triRender(
     const double a[2], const double b[2], const double c[2],
-    const double rgb[3], const double alpha[2],
-    const double beta[2], const double gamma[2], const texTexture *tex)
+    const double rgb[3], const texTexture *tex, const double alpha[2],
+    const double beta[2], const double gamma[2])
 {
     // printf("Triangle coord: A(%f,%f); B(%f,%f); C(%f,%f)\n", a[0], a[1], b[0], b[1], c[0], c[1]);
     if (a[0] <= b[0] && a[0] <= c[0])
         triRenderALeft(a, b, c,
-                       rgb, alpha, beta, gamma);
+                       rgb, tex, alpha, beta, gamma);
 
     else if (b[0] <= c[0] && b[0] <= a[0])
         triRenderALeft(b, c, a,
-                       rgb, beta, gamma, alpha);
+                       rgb, tex, beta, gamma, alpha);
 
     else
         triRenderALeft(c, a, b,
-                       rgb, gamma, alpha, beta);
+                       rgb, tex, gamma, alpha, beta);
 }
