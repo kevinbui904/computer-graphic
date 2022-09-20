@@ -38,9 +38,9 @@ void handleTimeStep(double oldTime, double newTime)
     vecAdd(2, transl, aa, aa);
     vecAdd(2, transl, bb, bb);
     vecAdd(2, transl, cc, cc);
-    // vecScale(3, (2.0 + sin(newTime)) / 3.0, rgb, rrggbb);
+    vecScale(3, (2.0 + sin(newTime)) / 3.0, rgb, rrggbb);
     pixClearRGB(0.0, 0.0, 0.0);
-    triRender(aa, bb, cc, rgb, alpha, beta, gam);
+    triRender(aa, bb, cc, rrggbb, alpha, beta, gam);
 }
 
 int main(void)
@@ -51,7 +51,6 @@ int main(void)
     if (pixInitialize(512, 512, "Testing") != 0)
         return 1;
     pixSetTimeStepHandler(handleTimeStep);
-    // triRender(A, B, C, rgb, alpha, beta, gam);
     pixRun();
     pixFinalize();
     return 0;

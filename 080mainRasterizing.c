@@ -22,7 +22,7 @@
 int triNum = 1;
 
 // global RGB
-double rgb[3] = {1.0, -0.5, 0.0};
+double rgb[3] = {1.0, 0.0, 1.0};
 
 /*
 Handle keyboard input for demo
@@ -31,7 +31,6 @@ void handleKeyUp(int key, int shiftIsDown, int controlIsDown,
                  int altOptionIsDown, int superCommandIsDown)
 {
     double a[2], b[2], c[2];
-
     if (key == GLFW_KEY_ENTER)
     {
         pixClearRGB(0.0, 0.0, 0.0);
