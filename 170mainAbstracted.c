@@ -47,6 +47,7 @@ void shadeFragment(
 		double interpolatedRGB[3] = {attr[2], attr[3], attr[4]}, sampled[3];
 		texSample(*tex,attr[5],attr[6],sampled);
 
+		printf("why this no work\n");
 		//set rgb to uniform colors for modulating later
 		rgb[0] = unif[0];
 		rgb[1] = unif[1];
