@@ -44,13 +44,22 @@ void shadeFragment(
         int unifDim, const double unif[], int texNum, const texTexture *tex[], 
         int attrDim, const double attr[], double rgb[3]) {
 		
-		double interpolatedRGB[3] = {attr[4], attr[5], attr[6]}, sampled[3];
-		texSample(*tex,attr[2],attr[3],sampled);
+		double interpolatedRGB[3] = {attr[4], attr[5], attr[6]}, texture1[3], 
+        texture2[3], overlaidTexture[3];
+		
+        
+        texSample(tex[0],attr[2], attr[3],texture1);
+        //texSample(tex[1],attr[2], attr[3], texture2);
+
+        texSample(tex[1], texture1[0], texture1[1], overlaidTexture);
+
+
+        
 		//set rgb to uniform colors for modulating later
 		rgb[0] = unif[0];
 		rgb[1] = unif[1];
 		rgb[2] = unif[2];
-		vecModulate(3, rgb, sampled, rgb);    
+		vecModulate(3, rgb, overlaidTexture, rgb);    
 		vecModulate(3, rgb, interpolatedRGB, rgb);
 }
 
@@ -64,15 +73,15 @@ shaShading sha;
 const qualifier can be enforced throughout the surrounding code. C is confusing 
 for stuff like this. Don't worry about mastering C at this level. It doesn't 
 come up much in our course. */
-texTexture texture;
-const texTexture *textures[1] = {&texture};
+texTexture texture1, texture2;
+const texTexture *textures[2] = {&texture1, &texture2};
 const texTexture **tex = textures;
 
 void render(void) {
 	pixClearRGB(0.0, 0.0, 0.0);
-	double a[7] = {400.0, 100.0, 1.0, 1.0, 1.0, 0.0, 0.0};
-	double b[7] = {500.0, 500.0, 0.0, 1.0, 0.0, 1.0, 0.0};
-	double c[7] = {30.0, 30.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+	double a[7] = {400.0, 100.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+	double b[7] = {500.0, 500.0, 0.0, 1.0, 1.0, 1.0, 1.0};
+	double c[7] = {30.0, 30.0, 0.0, 0.0, 1.0, 1.0, 1.0};
 	double unif[3] = {1.0, 1.0, 1.0};
 	triRender(&sha, unif, tex, a, b, c);
 }
@@ -80,10 +89,10 @@ void render(void) {
 void handleKeyUp(int key, int shiftIsDown, int controlIsDown, 
 		int altOptionIsDown, int superCommandIsDown) {
 	if (key == GLFW_KEY_ENTER) {
-		if (texture.filtering == texLINEAR)
-			texSetFiltering(&texture, texNEAREST);
+		if (texture1.filtering == texLINEAR)
+			texSetFiltering(&texture1, texNEAREST);
 		else
-			texSetFiltering(&texture, texLINEAR);
+			texSetFiltering(&texture1, texLINEAR);
 		render();
 	}
 }
@@ -96,22 +105,31 @@ void handleTimeStep(double oldTime, double newTime) {
 int main(void) {
 	if (pixInitialize(512, 512, "Abstracted") != 0)
 		return 1;
-	if (texInitializeFile(&texture, "./facesmall.jpg") != 0) {
+	if (texInitializeFile(&texture1, "./140imageCat.jpg") != 0) {
 		pixFinalize();
 		return 2;
 	}
+    if (texInitializeFile(&texture2, "./nyan.jpg") != 0) {
+        pixFinalize();
+        return 2;
+    }
 
-    texSetFiltering(&texture, texNEAREST);
-    texSetLeftRight(&texture, texREPEAT);
-    texSetTopBottom(&texture, texREPEAT);
+    texSetFiltering(&texture1, texNEAREST);
+    texSetLeftRight(&texture1, texREPEAT);
+    texSetTopBottom(&texture1, texREPEAT);
+
+    texSetFiltering(&texture2, texNEAREST);
+    texSetLeftRight(&texture2, texREPEAT);
+    texSetTopBottom(&texture2, texREPEAT);
     sha.unifDim = 3;
     sha.attrDim = 2 + 2 + 3;
-    sha.texNum = 1;
+    sha.texNum = 2;
     render();
     pixSetKeyUpHandler(handleKeyUp);
     pixSetTimeStepHandler(handleTimeStep);
     pixRun();
-    texFinalize(&texture);
+    texFinalize(&texture1);
+    texFinalize(&texture2);
     pixFinalize();
     return 0;
 }
