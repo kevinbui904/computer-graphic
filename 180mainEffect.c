@@ -1,5 +1,5 @@
 /* On macOS, compile with...
-    clang 170mainAbstracted.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 180mainEffect.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
     cc 160mainAbstracted.c 040pixel.o -lglfw -lGL -lm -ldl
 */
