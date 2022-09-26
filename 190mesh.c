@@ -26,7 +26,6 @@ int meshInitialize(meshMesh *mesh, int triNum, int vertNum, int attrDim) {
 		mesh->triNum = triNum;
 		mesh->vertNum = vertNum;
 		mesh->attrDim = attrDim;
-        printf("initialize mesh attrDim: %f\n", mesh -> attrDim);
 	}
     
 	return (mesh->tri == NULL);
@@ -199,49 +198,41 @@ int meshSaveFile(const meshMesh *mesh, const char *path) {
 
 /*** Rendering ***/
 
+/*meshRender loops over the triangle in the mesh, for each triangle doing this:
+	1. get the triangle's three attribute vectors from the mesh
+	2. transform each attribute vector to a varying vector using the vertex shader
+	3. pass those three varying vectors to triRender
+	4. triRender rasterizes and interpolates based on those varyings
+	4. the fragment shader receives one interpolated varying vector
+	5. triRender passes the fragment shader's output color to pixSetRGB*/
+
 /* Renders the mesh. If the mesh and the shading have differing values for 
 attrDim, then prints an error message and does not render anything. */
 void meshRender(
         const meshMesh *mesh, const shaShading *sha, const double unif[], 
         const texTexture *tex[]) {
 
-    printf("sha: %f, mesh: %f\n", sha -> attrDim, mesh -> attrDim);
+    // printf("sha: %f, mesh: %f\n", sha -> attrDim, mesh -> attrDim);
 
-    printf("enter meshRender\n");
+    // printf("enter meshRender\n");
 	if (mesh -> attrDim != sha -> attrDim){
         printf("error: mesh and shading have differing attrDim\n");
+		exit(1);
         return;
     }
 
-    int *vertices;
+    double *vertices[3];
     int *triPointer;
 
     for(int triNumber = 0; triNumber < mesh -> triNum; triNumber += 1){
-
-        printf("enter first meshRender Loop\n");
         triPointer = meshGetTrianglePointer(mesh, triNumber);
-        printf("Triangle %i: %d, %d, %d\n", triNumber, triPointer[0], triPointer[1], triPointer[2]);
-
         for(int vertNumber = 0; vertNumber < 3; vertNumber += 1){
-            printf("enter second meshRender Loop\n");
-            vertices = meshGetVertexPointer(mesh, triPointer[vertNumber]);
-            //vertices[vertNumber] = meshGetVertexPointer(mesh, triPointer[vertNumber]);
-            printf("Vertice 0: %d, Vertice 1: %d, Vertice 2: %d\n", triNumber, vertices[0], vertices[1], vertices[2]);
+            vertices[vertNumber] = meshGetVertexPointer(mesh, triPointer[vertNumber]);
         }   
-        //vertexShader(); //need to code
-        //mesh -> attrDim * vert + k
-	    triRender(&sha, unif, &tex, vertices[0], vertices[1], vertices[2]);
+	    triRender(sha, unif, tex, vertices[0], vertices[1], vertices[2]);
     }
 
 
-
-    /*meshRender loops over the triangle in the mesh, for each triangle doing this:
-        1. get the triangle's three attribute vectors from the mesh
-        2. transform each attribute vector to a varying vector using the vertex shader
-        3. pass those three varying vectors to triRender
-        4. triRender rasterizes and interpolates based on those varyings
-        4. the fragment shader receives one interpolated varying vector
-        5. triRender passes the fragment shader's output color to pixSetRGB*/
 
 
 }

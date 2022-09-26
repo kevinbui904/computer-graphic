@@ -46,8 +46,7 @@ int mesh2DInitializeEllipse(
         sinTheta = sin(theta);
         vec4Set(x + rx * cosTheta, y + ry * sinTheta, 
             0.5 * cosTheta + 0.5, 0.5 * sinTheta + 0.5, attr);
-        //printf("x: %f, y: %f, s: %f, t: %f\n", attr[0], attr[1], attr[2], attr[3]);
-        // printf("mesh attrDim: %f\n", mesh->attrDim);
+
         meshSetVertex(mesh, i + 1, attr);
     }
 

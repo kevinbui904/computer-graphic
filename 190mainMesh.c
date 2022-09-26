@@ -48,14 +48,13 @@ void shadeFragment(
         int unifDim, const double unif[], int texNum, const texTexture *tex[], 
         int attrDim, const double attr[], double rgb[3]) {
 		
-		double interpolatedRGB[3] = {attr[4], attr[5], attr[6]}, sampled[3];
+		double sampled[3];
 		texSample(*tex,attr[2],attr[3],sampled);
 		//set rgb to uniform colors for modulating later
 		rgb[0] = unif[0];
 		rgb[1] = unif[1];
 		rgb[2] = unif[2];
 		vecModulate(3, rgb, sampled, rgb);    
-		vecModulate(3, rgb, interpolatedRGB, rgb);
 }
 
 /* We have to include triangle.c after defining shadeFragment, because triRender 
@@ -81,8 +80,7 @@ void render(void) {
 	// double b[7] = {500.0, 500.0, 0.0, 1.0, 1.0, 1.0, 1.0};
 	// double c[7] = {30.0, 30.0, 0.0, 0.0, 1.0, 1.0, 1.0};
 	double unif[3] = {1.0, 1.0, 1.0};
-    printf("sha: %f, mesh: %f\n", sha.attrDim, mesh.attrDim);
-    meshRender(&mesh, &sha, unif, &texture1);
+    meshRender(&mesh, &sha, unif, tex);
 
     //triRender(&sha, unif, tex, a, b, c);
 }
@@ -121,7 +119,7 @@ int main(void) {
     texSetLeftRight(&texture1, texREPEAT);
     texSetTopBottom(&texture1, texREPEAT);
 
-    if (mesh2DInitializeEllipse(&mesh, 300.0, 300.0, 100.0, 50.0, 5)!=0){
+    if (mesh2DInitializeEllipse(&mesh, 300.0, 300.0, 100.0, 50.0, 100)!=0){
         pixFinalize();
         return 1;
     }
