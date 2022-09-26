@@ -35,7 +35,6 @@ helper function for triRender
 void triRenderALeft(
         const shaShading *sha, const double unif[], const texTexture *tex[], 
         const double a[], const double b[], const double c[]){
-    //printf("entered left triangle render\n");
 
     // Calculate matrix A based on vectors a, b, c
     double A[2][2] = {{b[0]-a[0], c[0]-a[0]}, {b[1]-a[1], c[1]-a[1]}};
@@ -55,7 +54,6 @@ void triRenderALeft(
 
     //Case if a0 = c0, prevent division by 0
     if (a[0] == c[0]){
-        //printf("entered a0=c0\n");
 
         for(int x0 = ceil(a[0]); x0<=floor(b[0]); x0++){
 
@@ -63,7 +61,6 @@ void triRenderALeft(
         double lower = ceil(a[1]+(b[1]-a[1])/(b[0]-a[0])*(x0-a[0]));
 
         for(int x1 = lower; x1 <= upper; x1++){
-            // printf("entered left print loops\n");
             x[0]=x0;
             x[1]=x1;
 
@@ -75,14 +72,12 @@ void triRenderALeft(
     }
     //Case if a0 = b0, prevent division by 0
     else if(a[0]==b[0]){
-        //printf("entered a0=b0\n");
         for(int x0 = ceil(a[0]); x0<=floor(c[0]); x0++){
 
             double upper = floor(a[1]+(c[1]-a[1])/(c[0]-a[0])*(x0-a[0]));
             double lower = ceil(b[1] + (c[1]-b[1])/(c[0]-b[0])*(x0-b[0]));
 
             for(int x1 = lower; x1 <= upper; x1++){
-                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
                 linearInterpolation(sha->attrDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
@@ -93,20 +88,17 @@ void triRenderALeft(
     }
     //Case if c0 <= b0
     else if(c[0] <= b[0]){
-        //printf("points were not equal: c0 < b0\n");
         for(int x0 = ceil(a[0]); x0<=floor(c[0]); x0++){
 
             double upper = floor(a[1]+((c[1]-a[1])/(c[0]-a[0])*(x0-a[0])));
             double lower = ceil(a[1] + ((b[1]-a[1])/(b[0]-a[0])*(x0-a[0])));
 
             for(int x1 = lower; x1 <= upper; x1++){
-                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
 
                 linearInterpolation(sha->attrDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
                 shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->attrDim, chi, final);
-
                 pixSetRGB(x0, x1, final[0], final[1], final[2]);
             }
         }
@@ -117,7 +109,6 @@ void triRenderALeft(
             double lower = ceil(a[1]+(b[1]-a[1])/(b[0]-a[0])*(x0-a[0]));
 
             for(int x1 = lower; x1 <= upper; x1++){
-                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
                 linearInterpolation(sha->attrDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
@@ -128,14 +119,12 @@ void triRenderALeft(
     }
     //case if b0 < c0
     else{
-        //printf("points were not equal: b0 < c0\n");
         for(int x0 = ceil(a[0]); x0<=floor(b[0]); x0++){
 
             double upper = floor(a[1]+((c[1]-a[1])/(c[0]-a[0])*(x0-a[0])));
             double lower = ceil(a[1] + ((b[1]-a[1])/(b[0]-a[0])*(x0-a[0])));
 
             for(int x1 = lower; x1 <= upper; x1++){
-                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
 
@@ -151,7 +140,6 @@ void triRenderALeft(
             double lower = ceil(b[1] + (c[1]-b[1])/(c[0]-b[0])*(x0-b[0]));
 
             for(int x1 = lower; x1 <= upper; x1++){
-                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
 
@@ -176,7 +164,6 @@ void triRender(
     }
     else if(b[0] <= c[0] && b[0] <= a[0]){
         triRenderALeft(sha, unif, tex, b, c ,a);
-
 
     }
     else{

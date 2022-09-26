@@ -246,7 +246,6 @@ void triRender(
     const double rgb[3], const double alpha[3], const double beta[3],
     const double gamma[3])
 {
-    // printf("Triangle coord: A(%f,%f); B(%f,%f); C(%f,%f)\n", a[0], a[1], b[0], b[1], c[0], c[1]);
     if (a[0] <= b[0] && a[0] <= c[0])
         triRenderALeft(a, b, c,
                        rgb, alpha, beta, gamma);

@@ -3,7 +3,7 @@
 /*** Public: For header file ***/
 
 /* On macOS, compile with...
-    clang 180mainEffect.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 190mainMesh.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
     cc 160mainAbstracted.c 040pixel.o -lglfw -lGL -lm -ldl
 */
@@ -48,46 +48,43 @@ void shadeFragment(
         int unifDim, const double unif[], int texNum, const texTexture *tex[], 
         int attrDim, const double attr[], double rgb[3]) {
 		
-        //create arrays for interpolated RGB, texture1's RGB, texture 2's RGB, and overlaid texture
-		double interpolatedRGB[3] = {attr[4], attr[5], attr[6]}, texture1[3], 
-        texture2[3], overlaidTexture[3];
-		
-        //Sample the colors of texture1
-        texSample(tex[0],attr[2], attr[3],texture1);
-        //texSample(tex[1],attr[2], attr[3], texture2);
-
-        //Sample the texture of texture2
-        texSample(tex[1], texture1[0], texture1[1], overlaidTexture);
-        
-		//set rgb to uniform colors for modulating
+		double interpolatedRGB[3] = {attr[4], attr[5], attr[6]}, sampled[3];
+		texSample(*tex,attr[2],attr[3],sampled);
+		//set rgb to uniform colors for modulating later
 		rgb[0] = unif[0];
 		rgb[1] = unif[1];
 		rgb[2] = unif[2];
-		vecModulate(3, rgb, overlaidTexture, rgb);    
+		vecModulate(3, rgb, sampled, rgb);    
 		vecModulate(3, rgb, interpolatedRGB, rgb);
 }
 
 /* We have to include triangle.c after defining shadeFragment, because triRender 
 refers to shadeFragment. (Later in the course we handle this issue better.) */
 #include "170triangle.c"
+#include "190mesh.c"
+#include "190mesh2D.c"
 
 /* This struct is initialized in main() below. */
 shaShading sha;
+meshMesh mesh;
 /* Here we make an array of one texTexture pointer, in such a way that the 
 const qualifier can be enforced throughout the surrounding code. C is confusing 
 for stuff like this. Don't worry about mastering C at this level. It doesn't 
 come up much in our course. */
-texTexture texture1, texture2;
-const texTexture *textures[2] = {&texture1, &texture2};
+texTexture texture1;
+const texTexture *textures[1] = {&texture1};
 const texTexture **tex = textures;
 
 void render(void) {
 	pixClearRGB(0.0, 0.0, 0.0);
-	double a[7] = {400.0, 100.0, 1.0, 1.0, 1.0, 1.0, 1.0};
-	double b[7] = {500.0, 500.0, 0.0, 1.0, 1.0, 1.0, 1.0};
-	double c[7] = {30.0, 30.0, 0.0, 0.0, 1.0, 1.0, 1.0};
+	// double a[7] = {400.0, 100.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+	// double b[7] = {500.0, 500.0, 0.0, 1.0, 1.0, 1.0, 1.0};
+	// double c[7] = {30.0, 30.0, 0.0, 0.0, 1.0, 1.0, 1.0};
 	double unif[3] = {1.0, 1.0, 1.0};
-	triRender(&sha, unif, tex, a, b, c);
+    printf("sha: %f, mesh: %f\n", sha.attrDim, mesh.attrDim);
+    meshRender(&mesh, &sha, unif, &texture1);
+
+    //triRender(&sha, unif, tex, a, b, c);
 }
 
 void handleKeyUp(int key, int shiftIsDown, int controlIsDown, 
@@ -109,35 +106,39 @@ void handleTimeStep(double oldTime, double newTime) {
 int main(void) {
 	if (pixInitialize(512, 512, "Abstracted") != 0)
 		return 1;
+
+    //initialize nyan cat as mesh
+    //meshInitializeFile(&mesh, "./nyan.jpg");
     
+
     //initialize grumpy cat as texture1
-	if (texInitializeFile(&texture1, "./140imageCat.jpg") != 0) {
+	if (texInitializeFile(&texture1, "./nyan.jpg") != 0) {
 		pixFinalize();
 		return 2;
 	}
-
-    //initialize nyan cat as texture2
-    if (texInitializeFile(&texture2, "./nyan.jpg") != 0) {
-        pixFinalize();
-        return 2;
-    }
 
     texSetFiltering(&texture1, texNEAREST);
     texSetLeftRight(&texture1, texREPEAT);
     texSetTopBottom(&texture1, texREPEAT);
 
-    texSetFiltering(&texture2, texNEAREST);
-    texSetLeftRight(&texture2, texREPEAT);
-    texSetTopBottom(&texture2, texREPEAT);
+    if (mesh2DInitializeEllipse(&mesh, 300.0, 300.0, 100.0, 50.0, 5)!=0){
+        pixFinalize();
+        return 1;
+    }
+
     sha.unifDim = 3;
-    sha.attrDim = 2 + 2 + 3;
-    sha.texNum = 2;
+    sha.attrDim = 2 + 2;
+    sha.texNum = 1;
+
     render();
+
     pixSetKeyUpHandler(handleKeyUp);
     pixSetTimeStepHandler(handleTimeStep);
+
     pixRun();
+    
     texFinalize(&texture1);
-    texFinalize(&texture2);
+    meshFinalize(&mesh);
     pixFinalize();
     return 0;
 }

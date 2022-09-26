@@ -4,11 +4,11 @@
 #include <math.h>
 #include <GLFW/glfw3.h>
 
-void linearInterpolation(const double a[2], const double b[2], const double c[2], const double x[2], 
-        const double rgb[3], const double alpha[2], const double AInv[2][2],const double betaMinAlpha[2], const double gamMinAlpha[2], double chi[2]){
+void linearInterpolation(const int varyDim, const double a[], const double b[], const double c[], const double x[2], 
+    const double AInv[2][2],const double betaMinAlpha[], const double gamMinAlpha[], double chi[]){
     
     //create empty vectors and matrix to input
-    double xMinusA[2], pq[2], pMult[2], qMult[2], pqMultAdd[2];
+    double xMinusA[2], pq[2], pMult[varyDim], qMult[varyDim], pqMultAdd[varyDim];
     
     // subtract vector x from vector a
     vecSubtract(2, x, a, xMinusA);
@@ -17,25 +17,25 @@ void linearInterpolation(const double a[2], const double b[2], const double c[2]
     mat221Multiply(AInv, xMinusA, pq);
 
     //p*(beta - alpha)
-    vecScale(2, pq[0], betaMinAlpha, pMult);
+    vecScale(varyDim, pq[0], betaMinAlpha, pMult);
 
     //q*(gamma - alpha)
-    vecScale(2, pq[1], gamMinAlpha, qMult);
+    vecScale(varyDim, pq[1], gamMinAlpha, qMult);
 
     //p*(beta - alpha) + q*(gamma - alpha)
-    vecAdd(2, pMult, qMult, pqMultAdd);
+    vecAdd(varyDim, pMult, qMult, pqMultAdd);
 
     //alpha + (p*(beta - alpha) + q*(gamma - alpha))
-    vecAdd(2, alpha, pqMultAdd, chi);
-
-    //modulate pixel color to find final color
-    //vecModulate(3, chi, rgb, final);
-
+    vecAdd(varyDim, a, pqMultAdd, chi);
 }
 
-void triRenderALeft(const double a[2], const double b[2], const double c[2], 
-        const double rgb[3], const texTexture *tex, const double alpha[2], const double beta[2], 
-        const double gam[2]){
+/*
+helper function for triRender
+*/
+void triRenderALeft(
+        const shaShading *sha, const double unif[], const texTexture *tex[], 
+        const double a[], const double b[], const double c[]){
+    //printf("entered left triangle render\n");
 
     // Calculate matrix A based on vectors a, b, c
     double A[2][2] = {{b[0]-a[0], c[0]-a[0]}, {b[1]-a[1], c[1]-a[1]}};
@@ -43,69 +43,70 @@ void triRenderALeft(const double a[2], const double b[2], const double c[2],
     double AInv[2][2];
     mat22Invert(A, AInv);
 
-    double betaMinAlpha[2], gamMinAlpha[2];
+    double betaMinAlpha[sha->varyDim], gamMinAlpha[sha->varyDim];
 
     //beta - alpha
-    vecSubtract(2, beta, alpha, betaMinAlpha);
+    vecSubtract(sha->varyDim, b, a, betaMinAlpha);
 
     //gamma - alpha
-    vecSubtract(2, gam, alpha, gamMinAlpha);
+    vecSubtract(sha->varyDim, c, a, gamMinAlpha);
 
-    double x[2], sample[3], chi[2], final[3];
+    double x[2], chi[sha->varyDim], final[3];
 
     //Case if a0 = c0, prevent division by 0
     if (a[0] == c[0]){
+        //printf("entered a0=c0\n");
+
         for(int x0 = ceil(a[0]); x0<=floor(b[0]); x0++){
 
         double upper = floor(c[1] + (b[1]-c[1])/(b[0]-c[0])*(x0-c[0]));
         double lower = ceil(a[1]+(b[1]-a[1])/(b[0]-a[0])*(x0-a[0]));
 
         for(int x1 = lower; x1 <= upper; x1++){
+            // printf("entered left print loops\n");
             x[0]=x0;
             x[1]=x1;
 
-            linearInterpolation(a, b, c, x, rgb, alpha, AInv, betaMinAlpha, gamMinAlpha, chi);
-
-            texSample(tex, chi[0], chi[1], sample);
-            vecModulate(3, sample, rgb, final);
+            linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+            shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
             pixSetRGB(x0, x1, final[0], final[1], final[2]);
         }
         }
     }
     //Case if a0 = b0, prevent division by 0
     else if(a[0]==b[0]){
+        //printf("entered a0=b0\n");
         for(int x0 = ceil(a[0]); x0<=floor(c[0]); x0++){
 
             double upper = floor(a[1]+(c[1]-a[1])/(c[0]-a[0])*(x0-a[0]));
             double lower = ceil(b[1] + (c[1]-b[1])/(c[0]-b[0])*(x0-b[0]));
 
             for(int x1 = lower; x1 <= upper; x1++){
+                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
-
-                linearInterpolation(a, b, c, x, rgb, alpha, AInv, betaMinAlpha, gamMinAlpha, chi);
-
-                texSample(tex, chi[0], chi[1], sample);
-                vecModulate(3, sample, rgb, final);
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
                 pixSetRGB(x0, x1, final[0], final[1], final[2]);
             }
         }
     }
     //Case if c0 <= b0
     else if(c[0] <= b[0]){
+        //printf("points were not equal: c0 < b0\n");
         for(int x0 = ceil(a[0]); x0<=floor(c[0]); x0++){
 
             double upper = floor(a[1]+((c[1]-a[1])/(c[0]-a[0])*(x0-a[0])));
             double lower = ceil(a[1] + ((b[1]-a[1])/(b[0]-a[0])*(x0-a[0])));
 
             for(int x1 = lower; x1 <= upper; x1++){
+                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
 
-                linearInterpolation(a, b, c, x, rgb, alpha, AInv, betaMinAlpha, gamMinAlpha, chi);
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
 
-                texSample(tex, chi[0], chi[1], sample);
-                vecModulate(3, sample, rgb, final);
                 pixSetRGB(x0, x1, final[0], final[1], final[2]);
             }
         }
@@ -116,32 +117,30 @@ void triRenderALeft(const double a[2], const double b[2], const double c[2],
             double lower = ceil(a[1]+(b[1]-a[1])/(b[0]-a[0])*(x0-a[0]));
 
             for(int x1 = lower; x1 <= upper; x1++){
+                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
-
-                linearInterpolation(a, b, c, x, rgb, alpha, AInv, betaMinAlpha, gamMinAlpha, chi);
-
-                texSample(tex, chi[0], chi[1], sample);
-                vecModulate(3, sample, rgb, final);
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
                 pixSetRGB(x0, x1, final[0], final[1], final[2]);
             }
         }
     }
     //case if b0 < c0
     else{
+        //printf("points were not equal: b0 < c0\n");
         for(int x0 = ceil(a[0]); x0<=floor(b[0]); x0++){
 
             double upper = floor(a[1]+((c[1]-a[1])/(c[0]-a[0])*(x0-a[0])));
             double lower = ceil(a[1] + ((b[1]-a[1])/(b[0]-a[0])*(x0-a[0])));
 
             for(int x1 = lower; x1 <= upper; x1++){
+                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
 
-                linearInterpolation(a, b, c, x, rgb, alpha, AInv, betaMinAlpha, gamMinAlpha, chi);
-
-                texSample(tex, chi[0], chi[1], sample);
-                vecModulate(3, sample, rgb, final);
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
                 pixSetRGB(x0, x1, final[0], final[1], final[2]);
             }
         }
@@ -152,34 +151,35 @@ void triRenderALeft(const double a[2], const double b[2], const double c[2],
             double lower = ceil(b[1] + (c[1]-b[1])/(c[0]-b[0])*(x0-b[0]));
 
             for(int x1 = lower; x1 <= upper; x1++){
+                // printf("entered left print loops\n");
                 x[0]=x0;
                 x[1]=x1;
 
-                linearInterpolation(a, b, c, x, rgb, alpha, AInv, betaMinAlpha, gamMinAlpha, chi);
-
-                texSample(tex, chi[0], chi[1], sample);
-                vecModulate(3, sample, rgb, final);
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
                 pixSetRGB(x0, x1, final[0], final[1], final[2]);
             }
         }
     }
 
 }
-
+/* Assumes that the 0th and 1th elements of a, b, c are the 'x' and 'y' 
+coordinates of the vertices, respectively (used in rasterization, and to 
+interpolate the other elements of a, b, c). */
 void triRender(
-        const double a[2], const double b[2], const double c[2], 
-        const double rgb[3], const texTexture *tex, const double alpha[2], 
-        const double beta[2], const double gam[2]){
+        const shaShading *sha, const double unif[], const texTexture *tex[], 
+        const double a[], const double b[], const double c[]){
 
     //reorder points to make a0 the leftmost
     if(a[0] <= b[0] && a[0] <= c[0]){
-        triRenderALeft(a, b, c, rgb, tex, alpha, beta, gam);
+        triRenderALeft(sha, unif, tex, a, b ,c);
     }
     else if(b[0] <= c[0] && b[0] <= a[0]){
-        triRenderALeft(b, c, a, rgb, tex, beta, gam, alpha);
+        triRenderALeft(sha, unif, tex, b, c ,a);
+
     }
     else{
-        triRenderALeft(c, a, b, rgb, tex, gam, alpha, beta);
+        triRenderALeft(sha, unif, tex, c, a ,b);
     }
 	
 }
