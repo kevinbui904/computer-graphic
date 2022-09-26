@@ -20,7 +20,7 @@ typedef struct shaShading shaShading;
 struct shaShading{
     int unifDim; //universal variable dimension
     int attrDim; // attribute dimension, used in interpolation
-    int texNum; // no clue what this is for ********
-    int varyDim;
+    int texNum; // Number of texture we're dealing with
+    int varyDim; // number of varying
 };
 
