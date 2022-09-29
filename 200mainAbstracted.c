@@ -98,8 +98,8 @@ void handleTimeStep(double oldTime, double newTime) {
 		printf("handleTimeStep: %f frames/sec\n", 1.0 / (newTime - oldTime));
 
 	//unif denote how much to shift x,y as time changes
-	unif[UNIFTRANSLX] += (newTime - oldTime) * 30;
-	unif[UNIFTRANSLY] += (newTime - oldTime) * 30;
+	unif[UNIFTRANSLX] += (newTime - oldTime);
+	unif[UNIFTRANSLY] += (newTime - oldTime);
 	unif[UNIFTHETA] += (newTime - oldTime) / 10;
 	pixClearRGB(0.0, 0.0, 0.0);
     meshRender(&mesh, &sha, unif, tex);

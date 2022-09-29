@@ -47,9 +47,9 @@ void shadeFragment(
 		double interpolatedRGB[3] = {attr[4], attr[5], attr[6]}, sampled[3];
 		texSample(*tex,attr[2],attr[3],sampled);
 		//set rgb to uniform colors for modulating later
-		rgb[0] = unif[0];
-		rgb[1] = unif[1];
-		rgb[2] = unif[2];
+		rgb[0] = unif[UNIFR];
+		rgb[1] = unif[UNIFB];
+		rgb[2] = unif[UNIFG];
 		vecModulate(3, rgb, sampled, rgb);    
 		vecModulate(3, rgb, interpolatedRGB, rgb);
 }
