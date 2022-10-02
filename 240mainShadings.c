@@ -2,7 +2,7 @@
 /* Contributors: Shannon Liu & Kevin Bui*/
 
 /* On macOS, compile with...c
-    clang 230mainHomogeneous.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 240mainShadings.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 */
 
 #include <stdio.h>
@@ -51,6 +51,14 @@ int holdingDown = 0;
 
 
 double circTranslateX = 0;
+double nyanX;
+double nyanY;
+double circleX;
+double circleY;
+
+//we must keep track of time ourselves since it's not built into
+//timeHandler
+double time = 0;
 
 void shadeVertex(
         int unifDim, const double unif[], int attrDim, const double attr[], 
@@ -128,7 +136,7 @@ texTexture textureCir;
 const texTexture *texturesCirc[1] = {&texture};
 const texTexture **texCirc = texturesCirc;
 double unifCir[4] = {1.0,1.0,0.0, 0};
-double translationVectorCir[2];
+double translationVectorCir[2] = {128.0, 128.0};
 
 
 
@@ -199,14 +207,27 @@ void handleTimeStep(double oldTime, double newTime) {
         deltaY = deltaY - 2;
     }
 
-    translationVector[0] = deltaX;
-    translationVector[1] = deltaY;
+    //internal time keeper
+    // used to keep track of time elapsed since program started
+    time++;
+    translationVector[0] = deltaX + 90.0;
+    translationVector[1] = deltaY + 90.0;
     
-    unifCir[3] -= cos(newTime) * 10.0;
+    
+    /*every 10 second, circle appears on the right (alternating top and bottom)
+      and moves to the left*/
+    if (fmod(time, 200) == 0){
+        unifCir[3] -= 10.0;
+    }
+    else{
+        unifCir[3] -= 10.0;
+    }
 
     double isom[3][3];
     mat33Isometry(rotationAngle, translationVector, isom);
     vecCopy(9, (double *)isom, &unif[UNIFMODELING]);
+
+    //if collision, then screen turns red indicating game over
 
     render();
 }
@@ -220,7 +241,7 @@ int main(void) {
     }
 // meshMesh *mesh, double left, double right, double bottom, double top
 
-    if (mesh2DInitializeRectangle(&meshNyan, 10.0, 100.0, 10.0, 100.0) != 0) {
+    if (mesh2DInitializeRectangle(&meshNyan, -45.0, 45.0, -45.0, 45.0) != 0) {
         texFinalize(&texture);
         pixFinalize();
         return 3;

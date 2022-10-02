@@ -31,30 +31,28 @@ shadeVertex. So instead we include them up here. It's good C style to have all
 #define VARYY 1
 #define VARYS 2
 #define VARYT 3
-
-#define UNIFMODELING 0
-#define UNIFR 9
-#define UNIFG 10
-#define UNIFB 11
-
+#define UNIFR 0
+#define UNIFG 1
+#define UNIFB 2
+#define UNIFTRANSL0 3
+#define UNIFTRANSL1 4
+#define UNIFROT 5
 #define TEXR 0
 #define TEXG 1
 #define TEXB 2
-
+#define UNIFMODELING 0
 
 void shadeVertex(
         int unifDim, const double unif[], int attrDim, const double attr[], 
         int varyDim, double vary[]) {
     
-    // create size 3 array from attribute array for 3x3x1 matrix multiplication
     double attrHomog[3] = {attr[ATTRX], attr[ATTRY], 1};
-    double varyHomog[3]; // declare size 3 array for homogeonated 
+    double varyHomog[3];
 
     mat331Multiply((double(*)[3])(&unif[UNIFMODELING]), attrHomog, varyHomog);
 
-    //input varyHomog into vary arrays for mesh rendering
-    vary[VARYX] = varyHomog[VARYX];
-    vary[VARYY] = varyHomog[VARYY];
+    vary[VARYX] += varyHomog[0];
+    vary[VARYY] += varyHomog[1];
     vary[VARYS] = attr[ATTRS];
     vary[VARYT] = attr[ATTRT];
 }
@@ -72,7 +70,7 @@ texTexture texture;
 const texTexture *textures[1] = {&texture};
 const texTexture **tex = textures;
 meshMesh mesh;
-double unif[12];
+double unif[6] = {1.0, 1.0, 1.0, -128.0, -128.0, 0.0};
 
 void render(void) {
     pixClearRGB(0.0, 0.0, 0.0);
@@ -100,18 +98,35 @@ void handleTimeStep(double oldTime, double newTime) {
 
     unif[UNIFR] = sin(newTime);
     unif[UNIFG] = cos(oldTime);
-
-    translationVector[0] = 256.0 + cos(newTime) * 128.0;
-    translationVector[1] = 256.0 + sin(newTime) * 128.0;
-    rotationAngle += (newTime - oldTime) * 3.0;
+    // rotationAngle += (newTime - oldTime) * 3.0;
+    // translationVector[0] = 256.0 + cos(newTime) * 128.0;
+    // translationVector[1] = 256.0 + sin(newTime) * 128.0;
 
     double isom[3][3];
     mat33Isometry(rotationAngle, translationVector, isom);
     vecCopy(9, (double *)isom, &unif[UNIFMODELING]);
+
     render();
 }
 
 int main(void) {
+    // double A[3][3]= {{10, 20, 30}, {10, 30, 40}, {5, 3, 6}};
+    // double B[3][3]= {{6, 5, 7}, {8, 2, 3}, {12, 3, 5}};
+
+    // double AMultB[3][3];
+
+    // mat333Multiply(A, B, AMultB);
+    // mat33Print(AMultB);
+
+    // double V[3] = {6, 3, 2};
+    // double AMultV[3];
+
+    // mat331Multiply(A, V, AMultV);
+
+    // printf("%f, %f, %f\n", AMultV[0], AMultV[1], AMultV[2]);
+
+
+
     if (pixInitialize(512, 512, "Shader Program") != 0)
         return 1;
     if (texInitializeFile(&texture, "./nyan.jpg") != 0) {
@@ -127,13 +142,7 @@ int main(void) {
     texSetLeftRight(&texture, texREPEAT);
     texSetTopBottom(&texture, texREPEAT);
     /* New! The shader program now records which shader functions to use. */
-
-    //Binding unif rgb for color modulation
-    unif[UNIFR] = 1.0;
-    unif[UNIFG] = 1.0;
-    unif[UNIFB] = 1.0;
-
-    sha.unifDim = 12;
+    sha.unifDim = 3 + 3;
     sha.attrDim = 2 + 2;
     sha.varyDim = 2 + 2;
     sha.texNum = 1;
