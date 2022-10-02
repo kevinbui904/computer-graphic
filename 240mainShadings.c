@@ -16,8 +16,8 @@
 #include "230matrix.c"
 #include "150texture.c"
 #include "220shading.c"
-/* New! We no longer need to include these files after shadeFragment and 
-shadeVertex. So instead we include them up here. It's good C style to have all 
+/* New! We no longer need to include these files after shadeFragment and
+shadeVertex. So instead we include them up here. It's good C style to have all
 #includes in one section near the top of the file. */
 #include "220triangle.c"
 #include "220mesh.c"
@@ -41,14 +41,14 @@ shadeVertex. So instead we include them up here. It's good C style to have all
 #define TEXG 1
 #define TEXB 2
 
-
+#define UNIFCIRTRANSX 3
 
 double rotationAngle = 0.0;
+// change in X,Y of nyanCat
 double deltaX = 0.0;
 double deltaY = 0.0;
 int holdingUp = 0;
 int holdingDown = 0;
-
 
 double circTranslateX = 0;
 double nyanX;
@@ -56,70 +56,73 @@ double nyanY;
 double circleX;
 double circleY;
 
-//we must keep track of time ourselves since it's not built into
-//timeHandler
+// we must keep track of time ourselves since it's not built into
+// timeHandler
 double time = 0;
 
 void shadeVertex(
-        int unifDim, const double unif[], int attrDim, const double attr[], 
-        int varyDim, double vary[]) {
+    int unifDim, const double unif[], int attrDim, const double attr[],
+    int varyDim, double vary[])
+{
 
-        double attrHomog[3] = {attr[ATTRX], attr[ATTRY], 1};
-        double varyHomog[3]; // declare size 3 array for homogeonated 
+    double attrHomog[3] = {attr[ATTRX], attr[ATTRY], 1};
+    double varyHomog[3]; // declare size 3 array for homogeonated
 
-        mat331Multiply((double(*)[3])(&unif[UNIFMODELING]), attrHomog, varyHomog);
+    mat331Multiply((double(*)[3])(&unif[UNIFMODELING]), attrHomog, varyHomog);
 
-        //input varyHomog into vary arrays for mesh rendering
-        vary[VARYX] = varyHomog[VARYX];
-        vary[VARYY] = varyHomog[VARYY];
-        vary[VARYS] = attr[ATTRS];
-        vary[VARYT] = attr[ATTRT];
+    // input varyHomog into vary arrays for mesh rendering
+    vary[VARYX] = varyHomog[VARYX];
+    vary[VARYY] = varyHomog[VARYY];
+    vary[VARYS] = attr[ATTRS];
+    vary[VARYT] = attr[ATTRT];
 }
 
 void shadeFragment(
-        int unifDim, const double unif[], int texNum, const texTexture *tex[], 
-        int varyDim, const double vary[], double rgb[3]) {
+    int unifDim, const double unif[], int texNum, const texTexture *tex[],
+    int varyDim, const double vary[], double rgb[3])
+{
 
     texSample(tex[0], vary[VARYS], vary[VARYT], rgb);
 
     // vecModulate(3, sample, &unif[UNIFR], rgb);
 }
 
-
 /**
  * shadeVertexCirc
  * vertex shader for circle, used in NyanCat game
  * */
 void shadeVertexCirc(
-        int unifDim, const double unif[], int attrDim, const double attr[], 
-        int varyDim, double vary[]) {
+    int unifDim, const double unif[], int attrDim, const double attr[],
+    int varyDim, double vary[])
+{
 
-        // double attrHomog[3] = {attr[ATTRX], attr[ATTRY], 1};
-        // double varyHomog[3]; // declare size 3 array for homogeonated 
+    // double attrHomog[3] = {attr[ATTRX], attr[ATTRY], 1};
+    // double varyHomog[3]; // declare size 3 array for homogeonated
 
-        // mat331Multiply((double(*)[3])(&unif[UNIFMODELING]), attrHomog, varyHomog);
+    // mat331Multiply((double(*)[3])(&unif[UNIFMODELING]), attrHomog, varyHomog);
 
-        // input varyHomog into vary arrays for mesh rendering
-        vary[VARYX] = attr[ATTRX] + unif[3];
-        vary[VARYY] = attr[ATTRY];
-        vary[VARYS] = attr[ATTRS];
-        vary[VARYT] = attr[ATTRT];
+    // input varyHomog into vary arrays for mesh rendering
+    vary[VARYX] = attr[ATTRX] + unif[UNIFCIRTRANSX];
+    vary[VARYY] = attr[ATTRY];
+    vary[VARYS] = attr[ATTRS];
+    vary[VARYT] = attr[ATTRT];
 }
 
 /**
  * shadeFragmentCirc
- * 
+ *
  * */
 void shadeFragmentCirc(
-        int unifDim, const double unif[], int texNum, const texTexture *tex[], 
-        int varyDim, const double vary[], double rgb[3]) {
+    int unifDim, const double unif[], int texNum, const texTexture *tex[],
+    int varyDim, const double vary[], double rgb[3])
+{
 
     vecCopy(3, unif, rgb);
 
     // vecModulate(3, sample, &unif[UNIFR], rgb);
 }
 
-//shader for nyan cat
+// shader for nyan cat
 shaShading shaNyan;
 texTexture texture;
 const texTexture *textures[1] = {&texture};
@@ -128,120 +131,141 @@ meshMesh meshNyan;
 double unif[9];
 double translationVector[2];
 
-
-//shader for circle (obstacle)
+// shader for circle (obstacle)
 meshMesh meshCirc;
 shaShading shaCirc;
 texTexture textureCir;
 const texTexture *texturesCirc[1] = {&texture};
 const texTexture **texCirc = texturesCirc;
-double unifCir[4] = {1.0,1.0,0.0, 0};
+double unifCir[4] = {1.0, 1.0, 0.0, 0.0};
 double translationVectorCir[2] = {128.0, 128.0};
 
-
-
-void render(void) {
+void render(void)
+{
     pixClearRGB(0.0, 0.0, 0.0);
     meshRender(&meshNyan, &shaNyan, unif, tex);
     meshRender(&meshCirc, &shaCirc, unifCir, texCirc);
 }
 
 void handleKeyUp(
-        int key, int shiftIsDown, int controlIsDown, int altOptionIsDown, 
-        int superCommandIsDown) {
+    int key, int shiftIsDown, int controlIsDown, int altOptionIsDown,
+    int superCommandIsDown)
+{
 
-    switch(key){
-        case GLFW_KEY_ENTER:
-            if (texture.filtering == texLINEAR)
-                texSetFiltering(&texture, texNEAREST);
-            else
-                texSetFiltering(&texture, texLINEAR);
-            render();
-            break;
-        case GLFW_KEY_UP:
-            holdingUp = 0;
-            break;
-        case GLFW_KEY_DOWN:
-            holdingDown = 0;
-            break;
+    switch (key)
+    {
+    case GLFW_KEY_ENTER:
+        if (texture.filtering == texLINEAR)
+            texSetFiltering(&texture, texNEAREST);
+        else
+            texSetFiltering(&texture, texLINEAR);
+        render();
+        break;
+    case GLFW_KEY_UP:
+        holdingUp = 0;
+        break;
+    case GLFW_KEY_DOWN:
+        holdingDown = 0;
+        break;
 
-        default:
-            printf("not yet handled\n");
+    default:
+        printf("not yet handled\n");
     }
-
 }
 
 void handleKeyDown(
-        int key, int shiftIsDown, int controlIsDown, int altOptionIsDown, 
-        int superCommandIsDown) {
+    int key, int shiftIsDown, int controlIsDown, int altOptionIsDown,
+    int superCommandIsDown)
+{
 
-    switch(key){
-        case GLFW_KEY_ENTER:
-            if (texture.filtering == texLINEAR)
-                texSetFiltering(&texture, texNEAREST);
-            else
-                texSetFiltering(&texture, texLINEAR);
-            render();
-            break;
-        case GLFW_KEY_UP:
-            holdingUp = 1;
-            break;
-        case GLFW_KEY_DOWN:
-            holdingDown = 1;
-            break;
+    switch (key)
+    {
+    case GLFW_KEY_ENTER:
+        if (texture.filtering == texLINEAR)
+            texSetFiltering(&texture, texNEAREST);
+        else
+            texSetFiltering(&texture, texLINEAR);
+        render();
+        break;
+    case GLFW_KEY_UP:
+        holdingUp = 1;
+        break;
+    case GLFW_KEY_DOWN:
+        holdingDown = 1;
+        break;
 
-        default:
-            printf("not yet handled\n");
+    default:
+        printf("not yet handled\n");
     }
-
 }
-void handleTimeStep(double oldTime, double newTime) {
+void handleTimeStep(double oldTime, double newTime)
+{
     if (floor(newTime) - floor(oldTime) >= 1.0)
         printf("handleTimeStep: %f frames/sec\n", 1.0 / (newTime - oldTime));
 
-    if(holdingUp == 1){
+    // if holding the key up, move cat up, doing it this way makes the scrolling smooth
+    if (holdingUp == 1)
+    {
         deltaY = deltaY + 2;
     }
-
-    if(holdingDown == 1){
+    // if holding down, move cat down
+    if (holdingDown == 1)
+    {
         deltaY = deltaY - 2;
     }
 
-    //internal time keeper
-    // used to keep track of time elapsed since program started
+    //  internal time keeper
+    //  used to keep track of time elapsed since program started
     time++;
-    translationVector[0] = deltaX + 90.0;
-    translationVector[1] = deltaY + 90.0;
-    
-    
+
+    // position of cat
+    translationVector[0] = deltaX + 45.0;
+    translationVector[1] = deltaY + 45.0;
+
     /*every 10 second, circle appears on the right (alternating top and bottom)
       and moves to the left*/
-    if (fmod(time, 200) == 0){
-        unifCir[3] -= 10.0;
+
+    // need to use fmod because % doesn't work with floats
+    if (fmod(time, 1500) == 0)
+    {
+        unifCir[UNIFCIRTRANSX] = 0.0;
     }
-    else{
-        unifCir[3] -= 10.0;
+    else
+    {
+        unifCir[UNIFCIRTRANSX] -= 1.0;
+    }
+
+    // collision detection
+    // if collide, just exit the program, cat died
+    if (unifCir[UNIFCIRTRANSX] < -430.0 && unifCir[UNIFCIRTRANSX] > -520)
+    {
+        if (170.0 <= deltaY && deltaY <= 240.0)
+        {
+            printf("COLLIDED...nyan cat has died\n");
+            exit(1);
+        }
     }
 
     double isom[3][3];
     mat33Isometry(rotationAngle, translationVector, isom);
     vecCopy(9, (double *)isom, &unif[UNIFMODELING]);
 
-    //if collision, then screen turns red indicating game over
-
     render();
 }
 
-int main(void) {
+int main(void)
+{
     if (pixInitialize(512, 512, "Shader Program") != 0)
         return 1;
-    if (texInitializeFile(&texture, "./nyan.jpg") != 0) {
+    if (texInitializeFile(&texture, "./nyan.jpg") != 0)
+    {
         pixFinalize();
         return 2;
     }
-// meshMesh *mesh, double left, double right, double bottom, double top
+    // meshMesh *mesh, double left, double right, double bottom, double top
 
-    if (mesh2DInitializeRectangle(&meshNyan, -45.0, 45.0, -45.0, 45.0) != 0) {
+    if (mesh2DInitializeRectangle(&meshNyan, -45.0, 45.0, -45.0, 45.0) != 0)
+    {
         texFinalize(&texture);
         pixFinalize();
         return 3;
@@ -251,9 +275,9 @@ int main(void) {
     texSetTopBottom(&texture, texCLIP);
     /* New! The shader program now records which shader functions to use. */
 
-
-    //make mesh for circle
-    if (mesh2DInitializeEllipse(&meshCirc, 400.0, 200.0, 20.0, 20.0, 15) != 0) {
+    // make mesh for circle
+    if (mesh2DInitializeEllipse(&meshCirc, 520.0, 260.0, 20.0, 20.0, 15) != 0)
+    {
         printf("unable to load mesh for circle, exiting...\n");
         exit(1);
         return 3;
@@ -285,4 +309,3 @@ int main(void) {
     pixFinalize();
     return 0;
 }
-
