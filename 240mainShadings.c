@@ -133,11 +133,13 @@ double translationVector[2];
 
 // shader for circle (obstacle)
 meshMesh meshCirc;
+meshMesh meshCirc2;
 shaShading shaCirc;
 texTexture textureCir;
 const texTexture *texturesCirc[1] = {&texture};
 const texTexture **texCirc = texturesCirc;
 double unifCir[4] = {1.0, 1.0, 0.0, 0.0};
+double unifCir2[4] = {1.0, 1.0, 0.0, 0.0};
 double translationVectorCir[2] = {128.0, 128.0};
 
 void render(void)
@@ -145,6 +147,7 @@ void render(void)
     pixClearRGB(0.0, 0.0, 0.0);
     meshRender(&meshNyan, &shaNyan, unif, tex);
     meshRender(&meshCirc, &shaCirc, unifCir, texCirc);
+    meshRender(&meshCirc2, &shaCirc, unifCir2, texCirc);
 }
 
 void handleKeyUp(
@@ -204,14 +207,14 @@ void handleTimeStep(double oldTime, double newTime)
         printf("handleTimeStep: %f frames/sec\n", 1.0 / (newTime - oldTime));
 
     // if holding the key up, move cat up, doing it this way makes the scrolling smooth
-    if (holdingUp == 1)
+    if (holdingUp == 1 && deltaY < 512-90)
     {
-        deltaY = deltaY + 2;
+        deltaY = deltaY + 3;
     }
     // if holding down, move cat down
-    if (holdingDown == 1)
+    if (holdingDown == 1 && deltaY > 0)
     {
-        deltaY = deltaY - 2;
+        deltaY = deltaY - 3;
     }
 
     //  internal time keeper
@@ -232,14 +235,32 @@ void handleTimeStep(double oldTime, double newTime)
     }
     else
     {
-        unifCir[UNIFCIRTRANSX] -= 1.0;
+        unifCir[UNIFCIRTRANSX] -= 2.0;
+    }
+
+    if (fmod(time, 800) == 0)
+    {
+        unifCir2[UNIFCIRTRANSX] = 0.0;
+    }
+    else
+    {
+        unifCir2[UNIFCIRTRANSX] -= 2.0;
     }
 
     // collision detection
     // if collide, just exit the program, cat died
     if (unifCir[UNIFCIRTRANSX] < -430.0 && unifCir[UNIFCIRTRANSX] > -520)
     {
-        if (170.0 <= deltaY && deltaY <= 240.0)
+        if (170.0 <= deltaY && deltaY <= 270.0)
+        {
+            printf("COLLIDED...nyan cat has died\n");
+            exit(1);
+        }
+    }
+
+    if (unifCir2[UNIFCIRTRANSX] < -430.0 && unifCir2[UNIFCIRTRANSX] > -520)
+    {
+        if (270.0 <= deltaY && deltaY <= 420.0)
         {
             printf("COLLIDED...nyan cat has died\n");
             exit(1);
@@ -283,6 +304,13 @@ int main(void)
         return 3;
     }
 
+    if (mesh2DInitializeEllipse(&meshCirc2, 520.0, 380.0, 20.0, 20.0, 15) != 0)
+    {
+        printf("unable to load mesh for circle, exiting...\n");
+        exit(1);
+        return 3;
+    }
+
     shaNyan.unifDim = 9;
     shaNyan.attrDim = 2 + 2;
     shaNyan.varyDim = 2 + 2;
@@ -304,6 +332,7 @@ int main(void)
     pixRun();
     meshFinalize(&meshNyan);
     meshFinalize(&meshCirc);
+    meshFinalize(&meshCirc2);
     texFinalize(&texture);
     texFinalize(&textureCir);
     pixFinalize();

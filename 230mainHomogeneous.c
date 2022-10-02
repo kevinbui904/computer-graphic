@@ -98,9 +98,6 @@ void handleTimeStep(double oldTime, double newTime) {
 
     unif[UNIFR] = sin(newTime);
     unif[UNIFG] = cos(oldTime);
-    // rotationAngle += (newTime - oldTime) * 3.0;
-    // translationVector[0] = 256.0 + cos(newTime) * 128.0;
-    // translationVector[1] = 256.0 + sin(newTime) * 128.0;
 
     double isom[3][3];
     mat33Isometry(rotationAngle, translationVector, isom);
@@ -110,22 +107,6 @@ void handleTimeStep(double oldTime, double newTime) {
 }
 
 int main(void) {
-    // double A[3][3]= {{10, 20, 30}, {10, 30, 40}, {5, 3, 6}};
-    // double B[3][3]= {{6, 5, 7}, {8, 2, 3}, {12, 3, 5}};
-
-    // double AMultB[3][3];
-
-    // mat333Multiply(A, B, AMultB);
-    // mat33Print(AMultB);
-
-    // double V[3] = {6, 3, 2};
-    // double AMultV[3];
-
-    // mat331Multiply(A, V, AMultV);
-
-    // printf("%f, %f, %f\n", AMultV[0], AMultV[1], AMultV[2]);
-
-
 
     if (pixInitialize(512, 512, "Shader Program") != 0)
         return 1;
