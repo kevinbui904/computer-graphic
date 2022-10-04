@@ -19,7 +19,7 @@ On Ubuntu, compile with...
 #include "220shading.c"
 
 #include "260depth.c"
-#include "260triangle.c"
+#include "270triangle.c"
 #include "260mesh.c"
 #include "190mesh2D.c"
 #include "250mesh3D.c"
@@ -90,7 +90,7 @@ double unif2[3 + 16] = {
 	0.0, 0.0, 0.0, 1.0};
 
 double rotationAngle = 0.0;
-double translationVector[2] = {256.0, 256.0};
+double translationVector[2] = {500.0, 256.0};
 
 depthBuffer buf;
 
