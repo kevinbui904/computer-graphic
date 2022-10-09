@@ -224,10 +224,9 @@ void meshRender(
 	double varyA[sha->varyDim];
 	double varyB[sha->varyDim];
 	double varyC[sha->varyDim];
-    double varyATrans[sha->varyDim];
-    double varyBTrans[sha->varyDim];
-    double varyBTrans[sha->varyDim];
-    double wA, wB, wC;
+    double viewportA[4];
+    double viewportB[4];
+    double viewportC[4];
 
     for(int triNumber = 0; triNumber < mesh->triNum; triNumber += 1){
         triPointer = meshGetTrianglePointer(mesh, triNumber);
@@ -238,17 +237,27 @@ void meshRender(
 		sha->shadeVertex(sha->unifDim, unif, sha->attrDim, vertices[1], sha->varyDim, varyB);
 		sha->shadeVertex(sha->unifDim, unif, sha->attrDim, vertices[2], sha->varyDim, varyC);
         
-        //viewport transformation
-        mat441Multiply(viewport, varyA, varyATrans);
-        mat441Multiply(viewport, varyB, varyBTrans);
-        mat441Multiply(viewport, varyC, varyCTrans);
+        //viewport transformation, we will put the viewport coordinates back into our varyings
+		//after
+
+		//we have hard coded mat441Multiply to ONLY grab up to 4 elements of vary,
+		//therefore the size of vary at this stage does not matter
+        mat441Multiply(viewport, varyA, viewportA);
+        mat441Multiply(viewport, varyB, viewportB);
+        mat441Multiply(viewport, varyC, viewportC);
 
         //homogeneous division on the XYZW part of the varyings
-        vecScale(sha->varyDim,1/varyATrans[3] , varyATrans);
-        vecScale(sha->varyDim,1/varyBTrans[3] , varyBTrans);
-        vecScale(sha->varyDim,1/varyCTrans[3] , varyCTrans);
+        vecScale(4, 1/viewportA[3], viewportA, viewportA);
+        vecScale(4, 1/viewportB[3], viewportB, viewportB);
+        vecScale(4, 1/viewportC[3], viewportC, viewportC);
 
-	    triRender(sha, buf, unif, tex, varyATrans, varyBTrans, varyCTrans);
+		//recopy new XYZW back into our varyings
+		//we are only changing the first 4 elements of our varyings
+		vecCopy(4, viewportA, varyA);
+		vecCopy(4, viewportB, varyB);
+		vecCopy(4, viewportC, varyC);
+
+	    triRender(sha, buf, unif, tex, varyA, varyB, varyC);
     }
 
 

@@ -313,9 +313,17 @@ input. */
 
 //figure out faster method
 void mat331TransposeMultiply(const double m[3][3], const double v[3], double mTTimesV[3]){
-    double mT[3][3];
-    mat33Transpose(m, mT);
-    mat331Multiply(mT, v, mTTimesV);
+ 
+    //NOTE:
+    /*
+        tranposing is swapping row and columns, so in our multiplication we just have to 
+        swap row by column to achieve the same computation
+    */
+    for (int i = 0; i < 3; i++)
+    {
+        mTTimesV[i] = (m[0][i] * v[0]) + (m[1][i] * v[1]) + (m[2][i] * v[2]);
+    }
+
 }
 
 /* Builds a 4x4 matrix for a viewport with lower left (0, 0) and upper right 
@@ -323,16 +331,28 @@ void mat331TransposeMultiply(const double m[3][3], const double v[3], double mTT
 [-1, 1] x [-1, 1] x [-1, 1] to screen [0, w] x [0, h] x [0, 1] (each interval 
 in that order). */
 void mat44Viewport(double width, double height, double view[4][4]){
-    view = {{width/2, 0, 0, width/2}, 
-            {0, height/2, 0, height/2},
-            {0, 0, 1/2, 1/2},
-            {0, 0, 0, 1}};
+    mat44Zero(view);
+    view[0][0] = width / 2;
+    view[0][3] = width / 2;
+    
+    view[1][1] = height / 2;
+    view[1][3] = height / 2;
+
+    view[2][2] = 0.5;
+    view[2][3] = 0.5;
+    view[3][3] = 1.0;
 }
 
 /* Inverse to the matrix produced by mat44Viewport. */
 void mat44InverseViewport(double width, double height, double view[4][4]){
-    view = {{2/width, 0, 0, -1}, 
-            {0, 2/height, 0, -1},
-            {0, 0, 2, -1},
-            {0, 0, 0, 1}};
+    mat44Zero(view);
+    view[0][0] = 2 / width;
+    view[0][3] = -1.0;
+    
+    view[1][1] = 2 / height;
+    view[1][3] = -1.0;
+
+    view[2][2] = 2.0;
+    view[2][3] = -1.0;
+    view[3][3] = 1.0;
 }
