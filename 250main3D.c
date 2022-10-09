@@ -1,5 +1,5 @@
 
-
+/* Contributors: Shannon Liu & Kevin Bui*/
 
 /* On macOS, compile with...
     clang 250main3D.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit

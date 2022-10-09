@@ -1,9 +1,9 @@
 // Written by Shannon Liu and Thien K. M. Bui
 
 /* On macOS, compile with...
-	clang 270mainDepth.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+	clang 280mainViewProj.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-	cc 270main3D.c 040pixel.o -lglfw -lGL -lm -ldl
+	cc 280mainViewProj.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 
 #include <stdio.h>
@@ -35,8 +35,9 @@ On Ubuntu, compile with...
 #define VARYX 0
 #define VARYY 1
 #define VARYZ 2
-#define VARYS 3
-#define VARYT 4
+#define VARYW 3
+#define VARYS 4
+#define VARYT 5
 #define UNIFR 0
 #define UNIFG 1
 #define UNIFB 2
@@ -92,14 +93,16 @@ double unif2[3 + 16] = {
 double rotationAngle = 0.0;
 double translationVector[2] = {500.0, 256.0};
 
+double viewport[4][4];
+
 depthBuffer buf;
 
 void render(void)
 {
 	pixClearRGB(0.0, 0.0, 0.0);
 	depthClearDepths(&buf, INT_MAX);
-	meshRender(&mesh, &buf, &sha, unif, tex);
-	meshRender(&mesh2, &buf, &sha, unif2, tex);
+	meshRender(&mesh, &buf, viewport, &sha, unif, tex);
+	meshRender(&mesh2, &buf, viewport, &sha, unif2, tex);
 }
 
 void handleKeyUp(
@@ -139,6 +142,8 @@ int main(void)
 {
 	if (pixInitialize(512, 512, "Three Dimensions") != 0)
 		return 1;
+
+    mat44Viewport(512, 512, viewport);
 
 	if (texInitializeFile(&texture, "./nyan.jpg") != 0)
 	{
