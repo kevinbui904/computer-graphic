@@ -2,15 +2,16 @@
 
 
 /* On macOS, compile with...
-    clang 330mainInterpolating.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 340mainLandscape.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 320mainInterpolating.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 340mainLandscape.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 #include <GLFW/glfw3.h>
+#include <time.h>
 
 #include "040pixel.h"
 
@@ -25,6 +26,9 @@ On Ubuntu, compile with...
 #include "250mesh3D.c"
 #include "300isometry.c"
 #include "300camera.c"
+#include "340landscape.c"
+
+#define LANDSIZE 40
 
 #define ATTRX 0
 #define ATTRY 1
@@ -41,6 +45,9 @@ On Ubuntu, compile with...
 #define VARYCONST 4
 #define VARYS 5
 #define VARYT 6
+#define VARYN 7
+#define VARYO 8
+#define VARYP 9
 #define UNIFMODELING 0
 #define UNIFPROJINVISOM 16
 #define TEXR 0
@@ -55,28 +62,26 @@ void shadeVertex(
 	double modHomog[4];
 	mat441Multiply((double(*)[4])(&unif[UNIFMODELING]), attrHomog, modHomog);
 	mat441Multiply((double(*)[4])(&unif[UNIFPROJINVISOM]), modHomog, vary);
-	vary[VARYS] = attr[ATTRS];
-	vary[VARYT] = attr[ATTRT];
-	vary[VARYCONST] = 1.0;
+	vecCopy(5, &attr[ATTRS], &vary[VARYS]);
+    vary[VARYCONST] = 1;
 }
 
 void shadeFragment(
         int unifDim, const double unif[], int texNum, const texTexture *tex[], 
         int varyDim, const double vary[], double rgbd[4]) {
-
-	//divide 1/w (stored as VARYCONST) by all varyings AFTER xyzw
-	double w = 1 / vary[VARYCONST];
-	double varyCorrected[varyDim];
-
-	for (int i = 0; i < varyDim; i++){
-		varyCorrected[i] = vary[i] * w;
-	}
-
 	double sample[tex[0]->texelDim];
-	texSample(tex[0], varyCorrected[VARYS], varyCorrected[VARYT], sample);
-	vecCopy(3, sample, rgbd);
-	
 
+    double w = 1 / vary[VARYCONST];
+    double varyCorrected[varyDim];
+    for (int i = VARYCONST; i < varyDim; i++){
+        varyCorrected[i] = vary[i] * w;
+    }
+	texSample(tex[0], varyCorrected[VARYS], varyCorrected[VARYT], sample);
+	sample[0] = sample[1] * 0.2 + 0.8;
+	sample[1] = sample[1] * 0.2 + 0.6;
+	sample[2] = 0.3;
+	double intensity = varyCorrected[VARYP] / vecLength(3, &varyCorrected[VARYN]);
+	vecScale(3, intensity, sample, rgbd);
 	rgbd[3] = vary[VARYZ];
 }
 
@@ -85,7 +90,7 @@ shaShading sha;
 texTexture texture;
 const texTexture *textures[1] = {&texture};
 const texTexture **tex = textures;
-meshMesh box;
+meshMesh landMesh;
 double unif[16 + 16] = {
 	1.0, 0.0, 0.0, 0.0, 
 	0.0, 1.0, 0.0, 0.0, 
@@ -97,14 +102,15 @@ double unif[16 + 16] = {
 	0.0, 0.0, 0.0, 1.0};
 double viewport[4][4];
 camCamera cam;
+double angle = M_PI * 0.25;
 
 void render(void) {
-	pixClearRGB(1.0, 0.0, 1.0);
+	pixClearRGB(0.8, 0.8, 1.0);
 	depthClearDepths(&buf, 1000000000.0);
 	double projInvIsom[4][4];
 	camGetProjectionInverseIsometry(&cam, projInvIsom);
     vecCopy(16, (double *)projInvIsom, &unif[UNIFPROJINVISOM]);
-	meshRender(&box, &buf, viewport, &sha, unif, tex);
+	meshRender(&landMesh, &buf, viewport, &sha, unif, tex);
 }
 
 void handleKeyUp(
@@ -115,7 +121,35 @@ void handleKeyUp(
 			texSetFiltering(&texture, texNEAREST);
 		else
 			texSetFiltering(&texture, texLINEAR);
+	} else if (key == GLFW_KEY_P) {
+	    if (cam.projectionType == camORTHOGRAPHIC)
+		    camSetProjectionType(&cam, camPERSPECTIVE);
+		else
+		    camSetProjectionType(&cam, camORTHOGRAPHIC);
+        camSetFrustum(&cam, M_PI / 6.0, 10.0, 10.0, 512, 512);
 	}
+}
+
+void handleKeyDownAndRepeat(
+        int key, int shiftIsDown, int controlIsDown, int altOptionIsDown, 
+        int superCommandIsDown) {
+    double position[3];
+    vecCopy(3, cam.isometry.translation, position);
+    if (key == GLFW_KEY_W) {
+        double delta[3] = {cos(angle), sin(angle), 0.0};
+        vecAdd(3, position, delta, position);
+    } else if (key == GLFW_KEY_S) {
+        double delta[3] = {cos(angle), sin(angle), 0.0};
+        vecSubtract(3, position, delta, position);
+    } else if (key == GLFW_KEY_A)
+        angle += M_PI / 12.0;
+    else if (key == GLFW_KEY_D)
+        angle -= M_PI / 12.0;
+    else if (key == GLFW_KEY_Q)
+        position[2] -= 1.0;
+    else if (key == GLFW_KEY_E)
+        position[2] += 1.0;
+    camLookFrom(&cam, position, M_PI * 0.6, angle);
 }
 
 void handleTimeStep(double oldTime, double newTime) {
@@ -125,8 +159,20 @@ void handleTimeStep(double oldTime, double newTime) {
 }
 
 int main(void) {
+    /* Randomly generate a grid of elevation data. */
+    double landData[LANDSIZE * LANDSIZE];
+    landFlat(LANDSIZE, landData, 0.0);
+    time_t t;
+	srand((unsigned)time(&t));
+    for (int i = 0; i < 12; i += 1)
+		landFaultRandomly(LANDSIZE, (double *)landData, 1.0 - i * 0.04);
+	for (int i = 0; i < 4; i += 1)
+		landBlur(LANDSIZE, (double *)landData);
+	for (int i = 0; i < 4; i += 1)
+		landBump(LANDSIZE, (double *)landData, landInt(0, LANDSIZE - 1), 
+		    landInt(0, LANDSIZE - 1), 5.0, 1.0);
     /* Marshal resources. */
-	if (pixInitialize(512, 512, "Perspective Correction?") != 0)
+	if (pixInitialize(512, 512, "Landscape") != 0)
 		return 1;
 	if (depthInitialize(&buf, 512, 512) != 0) {
 	    pixFinalize();
@@ -137,20 +183,29 @@ int main(void) {
 	    pixFinalize();
 		return 2;
 	}
-	if (mesh3DInitializeBox(&box, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0) != 0) {
+	if (mesh3DInitializeLandscape(&landMesh, LANDSIZE, 1.0, landData) != 0) {
 	    texFinalize(&texture);
 	    depthFinalize(&buf);
 	    pixFinalize();
 		return 3;
 	}
+	/* Manually re-assign texture coordinates. */
+	for (int i = 0; i < landMesh.vertNum; i += 1) {
+	    double *vertPtr = meshGetVertexPointer(&landMesh, i);
+	    double attr[landMesh.attrDim];
+	    vecCopy(landMesh.attrDim, vertPtr, attr);
+	    attr[ATTRS] = 0.0;
+	    attr[ATTRT] = attr[ATTRZ];
+	    meshSetVertex(&landMesh, i, attr);
+	}
 	/* Configure texture. */
     texSetFiltering(&texture, texNEAREST);
-    texSetLeftRight(&texture, texCLIP);
-    texSetTopBottom(&texture, texCLIP);
+    texSetLeftRight(&texture, texREPEAT);
+    texSetTopBottom(&texture, texREPEAT);
     /* Configure shader program. */
     sha.unifDim = 16 + 16;
     sha.attrDim = 3 + 2 + 3;
-    sha.varyDim = 4 + 2 + 1;
+    sha.varyDim = 4 + 2 + 3 + 1;
     sha.shadeVertex = shadeVertex;
     sha.shadeFragment = shadeFragment;
     sha.texNum = 1;
@@ -158,15 +213,17 @@ int main(void) {
     mat44Viewport(512, 512, viewport);
     camSetProjectionType(&cam, camPERSPECTIVE);
     camSetFrustum(&cam, M_PI / 6.0, 10.0, 10.0, 512, 512);
-    double target[3] = {0.0, 0.0, 0.0};
-    camLookAt(&cam, target, 10.0, M_PI / 3.0, M_PI / 4.0);
+    double position[3] = {-5.0, -5.0, 20.0};
+    camLookFrom(&cam, position, M_PI * 0.6, angle);
 	/* Run user interface. */
     render();
+    pixSetKeyDownHandler(handleKeyDownAndRepeat);
+    pixSetKeyRepeatHandler(handleKeyDownAndRepeat);
     pixSetKeyUpHandler(handleKeyUp);
     pixSetTimeStepHandler(handleTimeStep);
     pixRun();
     /* Clean up. */
-    meshFinalize(&box);
+    meshFinalize(&landMesh);
     texFinalize(&texture);
     depthFinalize(&buf);
     pixFinalize();
