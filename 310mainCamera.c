@@ -1,7 +1,7 @@
 // Written by Shannon Liu and Thien K. M. Bui
 
 /* On macOS, compile with...
-	clang 300mainCamera.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+	clang 310mainCamera.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
 	cc 270main3D.c 040pixel.o -lglfw -lGL -lm -ldl
 */
@@ -127,15 +127,29 @@ double translationVector[3] = {0.0, 0.0, -10.0};
 double translationVectorSphere[3] = {1.0, 1.0, -20.0};
 
 double viewport[4][4], proj[4][4], camInverseIsometry[4][4], finalProj[4][4];
-;
 
 depthBuffer buf;
 
+//camera setup
 camCamera camera;
-
 double target[3] = {0.0, 0.0, -10.0};
+
+//camera control
+double theta = -(M_PI/2);
+double phi = 0;
+double rho = 10;
+double fovy = M_PI/6;
+
 void render(void)
 {
+    camLookAt(&camera, target, rho, phi, theta);
+    camSetFrustum(&camera, fovy, 10, 10, 512,512);
+    camGetProjectionInverseIsometry(&camera, proj);
+
+    vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
+    vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
+    vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
+
 	pixClearRGB(0.0, 0.0, 0.0);
 	depthClearDepths(&buf, INT_MAX);
 	meshRender(&meshRedBox, &buf, viewport, &sha, unifRedBox, tex);
@@ -158,29 +172,49 @@ void handleKeyUp(
 		case GLFW_KEY_P:
 			if (camera.projectionType == camORTHOGRAPHIC){
 				camSetProjectionType(&camera, camPERSPECTIVE);
-				camLookAt(&camera, target, 10, 0, -(M_PI/2));
-				camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
-				camGetProjectionInverseIsometry(&camera, proj);
-
-				vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
-				vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
-				vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
 				render();
 			}
 			else{
 				camSetProjectionType(&camera, camORTHOGRAPHIC);
-				camLookAt(&camera, target, 10, 0, -(M_PI/2));
-				camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
-				camGetProjectionInverseIsometry(&camera, proj);
-
-				vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
-				vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
-				vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
 				render();
 			}
 			printf("ProjType current: %d\n", camera.projectionType);
-
 			break;
+        
+        //make theta smaller, which rotate camera to the left of XY plane
+        case GLFW_KEY_LEFT:
+            theta -= M_PI/180;
+            render();
+            break;
+        //the other direction
+        case GLFW_KEY_RIGHT:
+            theta += M_PI/180;
+            render();
+            break;
+        
+        //make phi smaller, which rotate camera down along the zy plane
+        case GLFW_KEY_DOWN:
+            phi -= M_PI/180;
+            render();
+            break;
+        case GLFW_KEY_UP:
+            phi += M_PI/180;
+            render();
+            break;
+
+        //decreasing fovy and increasing distance
+        //simulate a dolly-zooming in effect
+        case GLFW_KEY_O:
+            fovy -= M_PI/180;
+            rho -= 0.2;
+            render();
+            break; 
+        
+        case GLFW_KEY_L:
+            fovy += M_PI/180;
+            rho += 0.2;
+            render();
+            break;
 		default:
 			printf("undefined behavior, we'll implement this later\n");
 	}
@@ -248,17 +282,9 @@ int main(void)
 
 	//configure the camera
 	camSetProjectionType(&camera, camORTHOGRAPHIC);
-	camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
-	camLookAt(&camera, target, 10, 0, -(M_PI/2));
 
 	//setting up viewport
 	mat44Viewport(512, 512, viewport);
-	camGetProjectionInverseIsometry(&camera, proj);
-
-	//shoving our projection matrix into our
-	vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
-	vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
-	vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
 	
 	//setting up the rotation angles so that it is centered
 	double isomGreenBox[4][4], isomRedBox[4][4], isomSphere[4][4];
@@ -273,6 +299,7 @@ int main(void)
 	mat33AngleAxisRotation(rotationAngle, axis, rotation);
 	mat44Isometry(rotation, translationVectorSphere, isomSphere);
 
+    //setting UNIF for first render
 	vecCopy(16, (double *)isomRedBox, &unifRedBox[UNIFMODELING]);
 	vecCopy(16, (double *)isomGreenBox, &unifGreenBox[UNIFMODELING]);
 	vecCopy(16, (double *)isomSphere, &unifSphere[UNIFMODELING]);

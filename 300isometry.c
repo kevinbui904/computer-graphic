@@ -81,22 +81,10 @@ void isoGetInverseHomogeneous(const isoIsometry *iso, double homogInv[4][4]) {
 				the translation vector
 	*/
 	double inverseRotation[3][3], inverseTranslation[3], test[3][3];
-
 	mat33Transpose(iso->rotation, inverseRotation);
-	// printf("========transposing rotation=======\n");
-	mat33Print(iso->rotation);
-	// printf("\n");
-	// mat33Print(inverseRotation);
-
-	// printf("\n");
-	// mat333Multiply(iso->rotation, inverseRotation, test);
-	// mat33Print(test);
-
-	// printf("========transposing rotation=======\n");
+	mat333Multiply(iso->rotation, inverseRotation, test);
 	mat331Multiply(inverseRotation, iso->translation, inverseTranslation);
 	vecScale(3, -1, inverseTranslation, inverseTranslation);
-
 	mat44Isometry(inverseRotation, inverseTranslation, homogInv);
-	
 }
 

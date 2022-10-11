@@ -225,18 +225,17 @@ void mat33BasisRotation(const double u[3], const double v[3], const double a[3],
     vec3Cross(u, v, w);
     vec3Cross(a, b, c);
 
-    double R[3][3] = {{u[0], u[1], u[2]},
-                      {v[0], v[1], v[2]},
-                      {w[0], w[1], w[2]}};
+    double R[3][3] = {{u[0], v[0], w[0]},
+                      {u[1], v[1], w[1]},
+                      {u[2], v[2], w[2]}};
 
-    double S[3][3] = {{a[0], a[1], a[2]},
-                      {b[0], b[1], b[2]},
-                      {c[0], c[1], c[2]}};
+    double S[3][3] = {{a[0], b[0], c[0]},
+                      {a[1], b[1], c[1]},
+                      {a[2], b[2], c[2]}};
 
     double RT[3][3];
     mat33Transpose(R, RT);
-
-    mat333Multiply(RT, S, rot);
+    mat333Multiply(S, RT, rot);
 }
 
 /* Computes the transpose M^T of the given matrix M. The output CANNOT safely
