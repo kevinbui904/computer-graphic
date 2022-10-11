@@ -37,7 +37,19 @@ you untransform a point and then transform the result, then you recover the
 original point. The output CANNOT safely alias the input. */
 void isoUntransformPoint(
         const isoIsometry *iso, const double isoP[3], double p[3]) {
-	
+		/*
+		C = TR
+		cInverse = Rinverse Tinverse
+
+		NOTE:
+			inverse of a 3x3 matrix is its transpose
+		*/
+		double inverseRotation[3][3], pMinusIsoP[3];
+		mat33Transpose(iso->rotation, inverseRotation);
+		vecSubtract(3, isoP, iso->translation, pMinusIsoP);
+		mat331Multiply(inverseRotation, pMinusIsoP, p);
+
+
 }
 
 /* Applies the rotation to a direction vector (typically unit). The output 
@@ -63,9 +75,6 @@ void isoGetHomogeneous(const isoIsometry *iso, double homog[4][4]) {
 the product of this matrix and the one from isoGetHomogeneous is the identity 
 matrix. */
 void isoGetInverseHomogeneous(const isoIsometry *iso, double homogInv[4][4]) {
-    double isoAll[4][4], homog[4][4];
-    mat44Isometry(iso -> rotation, iso -> translation, isoAll);
-    isoGetHomogeneous(&iso, homog);
-    mat444Multiply(isoAll, homog, homogInv);
+
 }
 
