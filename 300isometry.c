@@ -75,6 +75,18 @@ void isoGetHomogeneous(const isoIsometry *iso, double homog[4][4]) {
 the product of this matrix and the one from isoGetHomogeneous is the identity 
 matrix. */
 void isoGetInverseHomogeneous(const isoIsometry *iso, double homogInv[4][4]) {
+	/*
+		Note: inverse translation is the same as 
+				the negative of inverseRoation times 
+				the translation vector
+	*/
+	double inverseRotation[3][3], inverseTranslation[3];
 
+	mat33Transpose(iso->rotation, inverseRotation);
+	mat331Multiply(inverseRotation, iso->translation, inverseTranslation);
+	vecScale(3, -1, inverseTranslation, inverseTranslation);
+
+	mat44Isometry(inverseRotation, inverseTranslation, homogInv);
+	
 }
 

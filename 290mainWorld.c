@@ -198,14 +198,14 @@ int main(void)
 		return 2;
 	}
 
-	if (mesh3DInitializeBox(&meshRedBox, -0.5, 0.5, -0.5, 0.5, -1.5, -1.0) != 0)
+	if (mesh3DInitializeBox(&meshRedBox, -0.5, 0.5, -1.5, -0.5, -1.5, -1.0) != 0)
     {
      texFinalize(&texture);
      pixFinalize();
      return 3;
     }
 
-	if (mesh3DInitializeBox(&meshGreenBox, -2.0, 2.0, -0.5, 0.5, 0.0, -5.0) != 0)
+	if (mesh3DInitializeBox(&meshGreenBox, -2.0, 2.0, -1.5, -0.5, -5.0, 0.0) != 0)
     {
      texFinalize(&texture);
 	 meshFinalize(&meshRedBox);

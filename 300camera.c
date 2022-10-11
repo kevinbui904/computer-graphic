@@ -154,7 +154,7 @@ void camSetFrustum(
 camera's inverse isometry (regardless of whether the camera is in orthographic 
 or perspective mode). */
 void camGetProjectionInverseIsometry(const camCamera *cam, double homog[4][4]) {
-	isoGetInverseHomogeneous(cam -> isometry, homog);
+	isoGetInverseHomogeneous(cam->isometry, homog);
 }
 
 
