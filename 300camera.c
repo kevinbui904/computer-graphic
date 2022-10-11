@@ -154,7 +154,26 @@ void camSetFrustum(
 camera's inverse isometry (regardless of whether the camera is in orthographic 
 or perspective mode). */
 void camGetProjectionInverseIsometry(const camCamera *cam, double homog[4][4]) {
-	isoGetInverseHomogeneous(cam->isometry, homog);
+	double proj[4][4], camInverseIsom[4][4], camIsom[4][4], test[4][4];
+
+	isoGetHomogeneous(&(cam->isometry), camIsom);
+	mat44Print(camIsom);
+	isoGetInverseHomogeneous(&(cam->isometry), camInverseIsom);
+	printf("\n");
+	mat44Print(camInverseIsom);
+
+	printf("\nShould be identity\n");
+	mat444Multiply(camIsom, camInverseIsom, test);
+	mat44Print(test);
+	if (cam->projectionType == camORTHOGRAPHIC){
+		camGetOrthographic(cam, proj);
+		mat444Multiply(proj, camInverseIsom, homog);
+	}
+	else{
+		camGetOrthographic(cam, proj);
+		mat444Multiply(proj, camInverseIsom, homog);
+	}
+
 }
 
 
