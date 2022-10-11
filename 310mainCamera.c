@@ -229,7 +229,7 @@ void handleTimeStep(double oldTime, double newTime)
 
 int main(void)
 {
-	if (pixInitialize(512, 512, "Main World") != 0)
+	if (pixInitialize(512, 512, "Main Camera") != 0)
 		return 1;
 
 	if (texInitializeFile(&texture, "./nyan.jpg") != 0)
