@@ -82,23 +82,33 @@ shaShading sha;
 texTexture texture;
 const texTexture *textures[1] = {&texture};
 const texTexture **tex = textures;
-meshMesh mesh;
-meshMesh mesh2;
-double unif[3 + 16 + 16] = {
-	1.0, 1.0, 1.0,
-
+meshMesh meshRedBox;
+meshMesh meshGreenBox;
+meshMesh meshSphere;
+double unifRedBox[3 + 16 + 16] = {
+	1.0, 0.0, 0.0,
 	1.0, 0.0, 0.0, 0.0,
 	0.0, 1.0, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.0, 0.0, 0.0, 1.0,
-
 	1.0, 0.0, 0.0, 0.0,
 	0.0, 1.0, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.0, 0.0, 0.0, 1.0};
 
-double unif2[3 + 16 + 16] = {
-	1.0, 0.0, 0.0,
+double unifGreenBox[3 + 16 + 16] = {
+	0.0, 1.0, 0.0,
+	1.0, 0.0, 0.0, 0.0,
+	0.0, 1.0, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.0, 0.0, 0.0, 1.0,
+	1.0, 0.0, 0.0, 0.0,
+	0.0, 1.0, 0.0, 0.0,
+	0.0, 0.0, 1.0, 0.0,
+	0.0, 0.0, 0.0, 1.0};
+
+double unifSphere[3 + 16 + 16] = {
+	1.0, 1.0, 1.0,
 	1.0, 0.0, 0.0, 0.0,
 	0.0, 1.0, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
@@ -110,7 +120,10 @@ double unif2[3 + 16 + 16] = {
 	0.0, 0.0, 0.0, 1.0};
 
 double rotationAngle = 0.0;
-double translationVector[3] = {2.0, 2.0, -10.0};
+double rotationAngleRedBox = M_PI/4;
+
+double translationVector[3] = {0.0, 0.0, -10.0};
+double translationVectorSphere[3] = {1.0, 1.0, -20.0};
 
 double viewport[4][4], proj[4][4];
 
@@ -122,8 +135,9 @@ void render(void)
 {
 	pixClearRGB(0.0, 0.0, 0.0);
 	depthClearDepths(&buf, INT_MAX);
-	meshRender(&mesh, &buf, viewport, &sha, unif, tex);
-	meshRender(&mesh2, &buf, viewport, &sha, unif2, tex);
+	meshRender(&meshRedBox, &buf, viewport, &sha, unifRedBox, tex);
+	meshRender(&meshGreenBox, &buf, viewport, &sha, unifGreenBox, tex);
+	meshRender(&meshSphere, &buf, viewport, &sha, unifSphere, tex);
 }
 
 void handleKeyUp(
@@ -144,8 +158,9 @@ void handleKeyUp(
 				camSetProjectionType(&camera, camPERSPECTIVE);
 				camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
 				camGetPerspective(&camera, proj);
-				vecCopy(16, (double *)proj, &unif[UNIFPROJ]);
-				vecCopy(16, (double *)proj, &unif2[UNIFPROJ]);
+				vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
+				vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
+				vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
 				render();
 			}
 			else{
@@ -153,8 +168,9 @@ void handleKeyUp(
 				camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
 
 				camGetOrthographic(&camera, proj);
-				vecCopy(16, (double *)proj, &unif[UNIFPROJ]);
-				vecCopy(16, (double *)proj, &unif2[UNIFPROJ]);
+				vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
+				vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
+				vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
 				render();
 			}
 
@@ -168,23 +184,7 @@ void handleTimeStep(double oldTime, double newTime)
 {
 	if (floor(newTime) - floor(oldTime) >= 1.0)
 		printf("handleTimeStep: %f frames/sec\n", 1.0 / (newTime - oldTime));
-
-	//this make the ball glow
-	// unif2[UNIFB] = sin(newTime);
-	// unif2[UNIFG] = cos(oldTime);
-	// rotationAngle += (newTime - oldTime);
-	// double isom[4][4];
-	// double rotation[3][3];
-	// double axis[3] = {1.0 / sqrt(3.0), 1.0 / sqrt(3.0), 1.0 / sqrt(3.0)};
-	// mat33AngleAxisRotation(rotationAngle, axis, rotation);
-	// mat44Isometry(rotation, translationVector, isom);
-	// vecCopy(16, (double *)isom, &unif[UNIFMODELING]);
-	// vecCopy(16, (double *)isom, &unif2[UNIFMODELING]);
-
-	// //vecCopy(16, (double *)proj, &unif[UNIFPROJ]);
-	// vecCopy(16, (double *)proj, &unif2[UNIFPROJ]);
-	
-	render();
+	// render();
 }
 
 int main(void)
@@ -198,40 +198,36 @@ int main(void)
 		return 2;
 	}
 
-	// if (mesh3DInitializeBox(&mesh, 10.0, 20.0, 10.0, 20.0, -30.0,-20.0) != 0)
-	// {
-	// 	texFinalize(&texture);
-	// 	pixFinalize();
-	// 	return 3;
-	// }
-
-	if (mesh3DInitializeBox(&mesh, -1.0, -3.0, 0.0, 1.0, -1.0, -2.0) != 0)
+	if (mesh3DInitializeBox(&meshRedBox, -0.5, 0.5, -0.5, 0.5, -1.5, -1.0) != 0)
     {
      texFinalize(&texture);
      pixFinalize();
      return 3;
     }
 
-	if (mesh3DInitializeSphere(&mesh2, 0.5, 30, 30) != 0)
+	if (mesh3DInitializeBox(&meshGreenBox, -2.0, 2.0, -0.5, 0.5, 0.0, -5.0) != 0)
+    {
+     texFinalize(&texture);
+	 meshFinalize(&meshRedBox);
+     pixFinalize();
+     return 4;
+    }
+
+	if (mesh3DInitializeSphere(&meshSphere, 0.5, 30, 30) != 0)
 	{
 		texFinalize(&texture);
-		meshFinalize(&mesh);
+		meshFinalize(&meshRedBox);
+		meshFinalize(&meshGreenBox);
 		pixFinalize();
-		return 4;
+		return 5;
 	}
-
-	// if (mesh3DInitializeBox(&mesh2, -10.0, -20.0, -10.0, -20.0, -40.0, -30.0) != 0)
-	// {
-	// 	texFinalize(&texture);
-	// 	pixFinalize();
-	// 	return 4;
-	// }
 
 	if(depthInitialize(&buf, 512,512) != 0){
 		texFinalize(&texture);
 		pixFinalize();
-		meshFinalize(&mesh);
-		meshFinalize(&mesh2);
+		meshFinalize(&meshRedBox);
+		meshFinalize(&meshGreenBox);
+		meshFinalize(&meshSphere);
 		return 5;
 	}
 	texSetFiltering(&texture, texNEAREST);
@@ -244,10 +240,6 @@ int main(void)
 	sha.shadeFragment = shadeFragment;
 	sha.texNum = 1;
 
-	//set up camera
-	double camSetup[6] = {0.0, 512.0, 0.0, 512.0, -200.0, -100.0};
-	// camSetProjection(&camera, camSetup);
-
 	camSetProjectionType(&camera, camORTHOGRAPHIC);
 	camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
 	camGetOrthographic(&camera, proj);
@@ -255,25 +247,34 @@ int main(void)
 	mat44Viewport(512, 512, viewport);
 
 	//shoving our projection matrix into our
-	vecCopy(16, (double *)proj, &unif[UNIFPROJ]);
-	vecCopy(16, (double *)proj, &unif2[UNIFPROJ]);
+	vecCopy(16, (double *)proj, &unifRedBox[UNIFPROJ]);
+	vecCopy(16, (double *)proj, &unifGreenBox[UNIFPROJ]);
+	vecCopy(16, (double *)proj, &unifSphere[UNIFPROJ]);
 	
 	//setting up the rotation angles so that it is centered
-	rotationAngle = 90;
-	double isom[4][4];
+	double isomGreenBox[4][4], isomRedBox[4][4], isomSphere[4][4];
 	double rotation[3][3];
 	double axis[3] = {1.0 / sqrt(3.0), 1.0 / sqrt(3.0), 1.0 / sqrt(3.0)};
 	mat33AngleAxisRotation(rotationAngle, axis, rotation);
-	mat44Isometry(rotation, translationVector, isom);
-	vecCopy(16, (double *)isom, &unif[UNIFMODELING]);
-	vecCopy(16, (double *)isom, &unif2[UNIFMODELING]);
+	mat44Isometry(rotation, translationVector, isomGreenBox);
+
+	mat33AngleAxisRotation(rotationAngleRedBox, axis, rotation);
+	mat44Isometry(rotation, translationVector, isomRedBox);
+
+	mat33AngleAxisRotation(rotationAngle, axis, rotation);
+	mat44Isometry(rotation, translationVectorSphere, isomSphere);
+
+	vecCopy(16, (double *)isomRedBox, &unifRedBox[UNIFMODELING]);
+	vecCopy(16, (double *)isomGreenBox, &unifGreenBox[UNIFMODELING]);
+	vecCopy(16, (double *)isomSphere, &unifSphere[UNIFMODELING]);
 
 	render();
 	pixSetKeyUpHandler(handleKeyUp);
 	pixSetTimeStepHandler(handleTimeStep);
 	pixRun();
-	meshFinalize(&mesh);
-	meshFinalize(&mesh2);
+	meshFinalize(&meshRedBox);
+	meshFinalize(&meshGreenBox);
+	meshFinalize(&meshSphere);
 	texFinalize(&texture);
 	depthFinalize(&buf);
 	pixFinalize();
