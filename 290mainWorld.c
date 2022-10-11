@@ -104,14 +104,13 @@ double unif2[3 + 16 + 16] = {
 	0.0, 0.0, 1.0, 0.0,
 	0.0, 0.0, 0.0, 1.0,
 
-
 	1.0, 0.0, 0.0, 0.0,
 	0.0, 1.0, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
 	0.0, 0.0, 0.0, 1.0};
 
 double rotationAngle = 0.0;
-double translationVector[2] = {10.0, 10.0};
+double translationVector[3] = {2.0, 2.0, -10.0};
 
 double viewport[4][4], proj[4][4];
 
@@ -143,7 +142,7 @@ void handleKeyUp(
 			printf("ProjType current: %d\n", camera.projectionType);
 			if (camera.projectionType == camORTHOGRAPHIC){
 				camSetProjectionType(&camera, camPERSPECTIVE);
-				camSetFrustum(&camera, M_PI-0.3, 10, 400, 512,512);
+				camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
 				camGetPerspective(&camera, proj);
 				vecCopy(16, (double *)proj, &unif[UNIFPROJ]);
 				vecCopy(16, (double *)proj, &unif2[UNIFPROJ]);
@@ -151,7 +150,7 @@ void handleKeyUp(
 			}
 			else{
 				camSetProjectionType(&camera, camORTHOGRAPHIC);
-				camSetFrustum(&camera, M_PI-0.3, 10, 400, 512,512);
+				camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
 
 				camGetOrthographic(&camera, proj);
 				vecCopy(16, (double *)proj, &unif[UNIFPROJ]);
@@ -199,27 +198,34 @@ int main(void)
 		return 2;
 	}
 
-	if (mesh3DInitializeBox(&mesh, 10.0, 20.0, 10.0, 20.0, -30.0,-20.0) != 0)
-	{
-		texFinalize(&texture);
-		pixFinalize();
-		return 3;
-	}
-
-	// if (mesh3DInitializeSphere(&mesh2, 5, 30, 30) != 0)
+	// if (mesh3DInitializeBox(&mesh, 10.0, 20.0, 10.0, 20.0, -30.0,-20.0) != 0)
 	// {
 	// 	texFinalize(&texture);
-	// 	meshFinalize(&mesh);
 	// 	pixFinalize();
-	// 	return 4;
+	// 	return 3;
 	// }
 
-	if (mesh3DInitializeBox(&mesh2, -10.0, -20.0, -10.0, -20.0, -40.0, -30.0) != 0)
+	if (mesh3DInitializeBox(&mesh, -1.0, -3.0, 0.0, 1.0, -1.0, -2.0) != 0)
+    {
+     texFinalize(&texture);
+     pixFinalize();
+     return 3;
+    }
+
+	if (mesh3DInitializeSphere(&mesh2, 0.5, 30, 30) != 0)
 	{
 		texFinalize(&texture);
+		meshFinalize(&mesh);
 		pixFinalize();
 		return 4;
 	}
+
+	// if (mesh3DInitializeBox(&mesh2, -10.0, -20.0, -10.0, -20.0, -40.0, -30.0) != 0)
+	// {
+	// 	texFinalize(&texture);
+	// 	pixFinalize();
+	// 	return 4;
+	// }
 
 	if(depthInitialize(&buf, 512,512) != 0){
 		texFinalize(&texture);
@@ -240,11 +246,10 @@ int main(void)
 
 	//set up camera
 	double camSetup[6] = {0.0, 512.0, 0.0, 512.0, -200.0, -100.0};
-	camSetProjection(&camera, camSetup);
-	camSetProjectionType(&camera, camORTHOGRAPHIC);
+	// camSetProjection(&camera, camSetup);
 
-	camGetOrthographic(&camera, proj);
-	camSetFrustum(&camera, M_PI-0.3, 10, 400, 512,512);
+	camSetProjectionType(&camera, camORTHOGRAPHIC);
+	camSetFrustum(&camera, M_PI/6, 10, 10, 512,512);
 	camGetOrthographic(&camera, proj);
 	//setting up viewport
 	mat44Viewport(512, 512, viewport);
