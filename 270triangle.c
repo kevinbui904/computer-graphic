@@ -65,172 +65,247 @@ void triRenderALeft(
     vecSubtract(sha->varyDim, c, a, gamMinAlpha);
 
     double x[2], chi[sha->varyDim], final[4];
-
+    int x0, x1;
     // Case if a0 = c0, prevent division by 0
     if (a[0] == c[0])
     {
-        // printf("entered a0=c0\n");
+        //viewport clipping from the left
+        if(ceil(a[0]) < 0){
+            x0 = 0;
+        }
+        else{
+            x0 = ceil(a[0]);
+        }
 
-        for (int x0 = ceil(a[0]); (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
+        //viewport clipping from the right (implemented straight into the for loop)
+        //first section of for loop not included because C expects initialization code.
+        //Since x0 is initialized outside, so the initialization is not include 
+        //(just treat this like a while loop)
+        for (; (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(c[1] + (b[1] - c[1]) / (b[0] - c[0]) * (x0 - c[0]));
             double lower = ceil(a[1] + (b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0]));
-
-            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
+            
+            //viewport clipping from the bottom
+            if (lower < 0){
+                x1 = 0;
+            }
+            else{
+                x1 = lower;
+            }
+            
+            //viewport clipping from the top
+            for (; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
                 x[1] = x1;
 
                 //only renders if the pixel is within viewport
-                if(x[0] <= buf->width && x[1] <= buf->height){
-                    linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
-                    sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
-                    
-                    if (final[3] < depthGetDepth(buf,x0,x1)){
-                        pixSetRGB(x0, x1, final[0], final[1], final[2]);
-                        depthSetDepth(buf, x0, x1, final[3]);
-                    }
-                } 
+              
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
+                
+                if (final[3] < depthGetDepth(buf,x0,x1)){
+                    pixSetRGB(x0, x1, final[0], final[1], final[2]);
+                    depthSetDepth(buf, x0, x1, final[3]);
+                }
+                
             }
         }
     }
     // Case if a0 = b0, prevent division by 0
     else if (a[0] == b[0])
     {
-        // printf("entered a0=b0\n");
-        for (int x0 = ceil(a[0]); (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
+        if(ceil(a[0]) < 0){
+            x0 = 0;
+        }
+        else{
+            x0 = ceil(a[0]);
+        }
+        for (; (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + (c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0]));
             double lower = ceil(b[1] + (c[1] - b[1]) / (c[0] - b[0]) * (x0 - b[0]));
 
-            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
+            if(lower < 0){
+                x1 = 0;
+            }
+            else{
+                x1 = lower;
+            }
+            for (; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
                 x[1] = x1;
 
                 //only renders if the pixel is within viewport
-                if(x[0] <= buf->width && x[1] <= buf->height){
-                    linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
-                    sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
-                    
-                    if (final[3] < depthGetDepth(buf,x0,x1)){
-                        pixSetRGB(x0, x1, final[0], final[1], final[2]);
-                        depthSetDepth(buf, x0, x1, final[3]);
-                    }
-                } 
+               
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
+                
+                if (final[3] < depthGetDepth(buf,x0,x1)){
+                    pixSetRGB(x0, x1, final[0], final[1], final[2]);
+                    depthSetDepth(buf, x0, x1, final[3]);
+                }
+                 
             }
         }
     }
     // Case if c0 <= b0
     else if (c[0] <= b[0])
     {
-        // printf("points were not equal: c0 < b0\n");
-        for (int x0 = ceil(a[0]); (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
+        if (ceil(a[0]) < 0){
+            x0 = 0;
+        }
+        else{
+            x0 = ceil(a[0]);
+        }
+        for (; (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + ((c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0])));
             double lower = ceil(a[1] + ((b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0])));
 
-            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
+            if(lower < 0){
+                x1 = 0;
+            }
+            else{
+                x1 = lower;
+            }
+            for (; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
                 x[1] = x1;
 
                 //only renders if the pixel is within viewport
-                if(x[0] <= buf->width && x[1] <= buf->height){
-                    linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
-                    sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
-                    
-                    if (final[3] < depthGetDepth(buf,x0,x1)){
-                        pixSetRGB(x0, x1, final[0], final[1], final[2]);
-                        depthSetDepth(buf, x0, x1, final[3]);
-                    }
-                } 
+                
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
+                
+                if (final[3] < depthGetDepth(buf,x0,x1)){
+                    pixSetRGB(x0, x1, final[0], final[1], final[2]);
+                    depthSetDepth(buf, x0, x1, final[3]);
+                }
+                 
             }
         }
-
-        for (int x0 = floor(c[0]) + 1; (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
+        if(floor(c[0]) + 1 < 0){
+            x0 = 0;
+        }
+        else{
+            x0 = floor(c[0]) + 1;
+        }
+        for (; (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(c[1] + (b[1] - c[1]) / (b[0] - c[0]) * (x0 - c[0]));
             double lower = ceil(a[1] + (b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0]));
-
-            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
+            
+            if(lower < 0){
+                x1 = 0;
+            }
+            else{
+                x1 = lower;
+            }
+            for (; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
                 x[1] = x1;
 
                 //only renders if the pixel is within viewport
-                if(x[0] <= buf->width && x[1] <= buf->height){
-                    linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
-                    sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
-                    
-                    if (final[3] < depthGetDepth(buf,x0,x1)){
-                        pixSetRGB(x0, x1, final[0], final[1], final[2]);
-                        depthSetDepth(buf, x0, x1, final[3]);
-                    }
+                
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
+                
+                if (final[3] < depthGetDepth(buf,x0,x1)){
+                    pixSetRGB(x0, x1, final[0], final[1], final[2]);
+                    depthSetDepth(buf, x0, x1, final[3]);
                 }
+                
             }
         }
     }
     // case if b0 < c0
     else
     {
-        // printf("points were not equal: b0 < c0\n");
-        for (int x0 = ceil(a[0]); (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
+        if(ceil(a[0]) < 0){
+            x0 = 0;
+        }
+        else{
+            x0 = ceil(a[0]);
+        }
+        for (; (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + ((c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0])));
             double lower = ceil(a[1] + ((b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0])));
 
-            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
+            if(lower < 0){
+                x1 = 0;
+            }
+            else{
+                x1 = lower;
+            }
+            for (; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
                 x[1] = x1;
               
                 //only renders if the pixel is within viewport
-                if(x[0] <= buf->width && x[1] <= buf->height){
-                    linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
-                    sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
-                    
-                    if (final[3] < depthGetDepth(buf,x0,x1)){
-                        pixSetRGB(x0, x1, final[0], final[1], final[2]);
-                        depthSetDepth(buf, x0, x1, final[3]);
-                    }
+                
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
+                
+                if (final[3] < depthGetDepth(buf,x0,x1)){
+                    pixSetRGB(x0, x1, final[0], final[1], final[2]);
+                    depthSetDepth(buf, x0, x1, final[3]);
                 }
+                
                 
             }
         }
 
-        for (int x0 = floor(b[0]) + 1; (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
+        if(floor(b[0]) + 1 < 0){
+            x0 = 0;
+        }
+        else{
+            x0 = floor(b[0]) + 1;
+        }
+        for (; (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + (c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0]));
             double lower = ceil(b[1] + (c[1] - b[1]) / (c[0] - b[0]) * (x0 - b[0]));
 
-            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
+            if(lower < 0){
+                x1 = 0;
+            }
+            else{
+                x1 = lower;
+            }
+            for (; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
                 x[1] = x1;
 
                 //only renders if the pixel is within viewport
-                if(x[0] <= buf->width && x[1] <= buf->height){
-                    linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
-                    sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
-                    
-                    if (final[3] < depthGetDepth(buf,x0,x1)){
-                        pixSetRGB(x0, x1, final[0], final[1], final[2]);
-                        depthSetDepth(buf, x0, x1, final[3]);
-                    }
+              
+                linearInterpolation(sha->varyDim, a, b, c, x, AInv, betaMinAlpha, gamMinAlpha, chi);
+                sha->shadeFragment(sha->unifDim, unif, sha->texNum, tex, sha->varyDim, chi, final);
+                
+                if (final[3] < depthGetDepth(buf,x0,x1)){
+                    pixSetRGB(x0, x1, final[0], final[1], final[2]);
+                    depthSetDepth(buf, x0, x1, final[3]);
                 }
+                
                  
             }
         }
