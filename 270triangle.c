@@ -1,6 +1,6 @@
 /* Contributors: Shannon Liu & Kevin Bui*/
 /**
- * 260 triangle.c
+ * 270 triangle.c
  * 
  */
 #include <stdio.h>
@@ -71,13 +71,13 @@ void triRenderALeft(
     {
         // printf("entered a0=c0\n");
 
-        for (int x0 = ceil(a[0]); x0 <= floor(b[0]); x0++)
+        for (int x0 = ceil(a[0]); (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(c[1] + (b[1] - c[1]) / (b[0] - c[0]) * (x0 - c[0]));
             double lower = ceil(a[1] + (b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0]));
 
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
@@ -100,13 +100,13 @@ void triRenderALeft(
     else if (a[0] == b[0])
     {
         // printf("entered a0=b0\n");
-        for (int x0 = ceil(a[0]); x0 <= floor(c[0]); x0++)
+        for (int x0 = ceil(a[0]); (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + (c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0]));
             double lower = ceil(b[1] + (c[1] - b[1]) / (c[0] - b[0]) * (x0 - b[0]));
 
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
@@ -129,13 +129,13 @@ void triRenderALeft(
     else if (c[0] <= b[0])
     {
         // printf("points were not equal: c0 < b0\n");
-        for (int x0 = ceil(a[0]); x0 <= floor(c[0]); x0++)
+        for (int x0 = ceil(a[0]); (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + ((c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0])));
             double lower = ceil(a[1] + ((b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0])));
 
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
@@ -154,13 +154,13 @@ void triRenderALeft(
             }
         }
 
-        for (int x0 = floor(c[0]) + 1; x0 <= floor(b[0]); x0++)
+        for (int x0 = floor(c[0]) + 1; (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(c[1] + (b[1] - c[1]) / (b[0] - c[0]) * (x0 - c[0]));
             double lower = ceil(a[1] + (b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0]));
 
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
@@ -183,13 +183,13 @@ void triRenderALeft(
     else
     {
         // printf("points were not equal: b0 < c0\n");
-        for (int x0 = ceil(a[0]); x0 <= floor(b[0]); x0++)
+        for (int x0 = ceil(a[0]); (x0 <= floor(b[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + ((c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0])));
             double lower = ceil(a[1] + ((b[1] - a[1]) / (b[0] - a[0]) * (x0 - a[0])));
 
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
@@ -209,13 +209,13 @@ void triRenderALeft(
             }
         }
 
-        for (int x0 = floor(b[0]) + 1; x0 <= floor(c[0]); x0++)
+        for (int x0 = floor(b[0]) + 1; (x0 <= floor(c[0]) && x0 <= buf->width); x0++)
         {
 
             double upper = floor(a[1] + (c[1] - a[1]) / (c[0] - a[0]) * (x0 - a[0]));
             double lower = ceil(b[1] + (c[1] - b[1]) / (c[0] - b[0]) * (x0 - b[0]));
 
-            for (int x1 = lower; x1 <= upper; x1++)
+            for (int x1 = lower; (x1 <= upper && x1 <= buf->height); x1++)
             {
                 // printf("entered left print loops\n");
                 x[0] = x0;
