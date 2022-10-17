@@ -2,9 +2,9 @@
 
 
 /* On macOS, compile with...
-    clang 350mainLandscape.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 350mainClipping.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 350mainLandscape.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 350mainClipping.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 
 #include <stdio.h>
