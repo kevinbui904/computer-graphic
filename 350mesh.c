@@ -197,16 +197,15 @@ int meshSaveFile(const meshMesh *mesh, const char *path) {
 /*
 	Helper function for triRender, we're applying the viewport transformation here
 */
-void triClippedRender(depthBuffer *buf, const double viewport[4][4], const shaShading *sha, const double unif[], const texTexture *tex[], const double varyA[], const double varyB[], const double varyC[]){
-		double finalVaryA[sha->varyDim], finalVaryB[sha->varyDim], finalVaryC[sha->varyDim];
+void triClippedRender(depthBuffer *buf, const double viewport[4][4], const shaShading *sha, const double unif[], const texTexture *tex[],  double varyA[],  double varyB[],  double varyC[]){
 		
 		double viewportA[4];
 		double viewportB[4];
 		double viewportC[4];
 		//copy ALL of varys into finalVarys
-		vecCopy(sha->varyDim, varyA, finalVaryA);
-		vecCopy(sha->varyDim, varyB, finalVaryB);
-		vecCopy(sha->varyDim, varyC, finalVaryC);
+		vecCopy(sha->varyDim, varyA, varyA);
+		vecCopy(sha->varyDim, varyB, varyB);
+		vecCopy(sha->varyDim, varyC, varyC);
 
 		//viewport transformation, we will put the viewport coordinates back into our varyings
 		//after
@@ -219,16 +218,16 @@ void triClippedRender(depthBuffer *buf, const double viewport[4][4], const shaSh
 
 		//recopy new XYZW back into our varyings
 		//we are only changing the first 4 elements of our varyings
-		vecCopy(4, viewportA, finalVaryA);
-		vecCopy(4, viewportB, finalVaryB);
-		vecCopy(4, viewportC, finalVaryC);
+		vecCopy(4, viewportA, varyA);
+		vecCopy(4, viewportB, varyB);
+		vecCopy(4, viewportC, varyC);
 
         //homogeneous division on the entire varying vector 
-        vecScale(sha->varyDim, 1/viewportA[3], finalVaryA, finalVaryA);
-        vecScale(sha->varyDim, 1/viewportB[3], finalVaryB, finalVaryB);
-        vecScale(sha->varyDim, 1/viewportC[3], finalVaryC, finalVaryC);
+        vecScale(sha->varyDim, 1/viewportA[3], varyA, varyA);
+        vecScale(sha->varyDim, 1/viewportB[3], varyB, varyB);
+        vecScale(sha->varyDim, 1/viewportC[3], varyC, varyC);
 
-	    triRender(sha, buf, unif, tex, finalVaryA, finalVaryB, finalVaryC);
+	    triRender(sha, buf, unif, tex, varyA, varyB, varyC);
 }
 /*** Rendering ***/
 
@@ -276,27 +275,27 @@ void meshRender(
 
 		//if vertexA is clipped
 		//a3 ≤ 0 or a3 < -a2
-
+		
 		// t = (a2 + a3) / (a2 + a3 - b2 - b3
-		if (varyA[2] <= 0 || varyA[2] <= -(varyA[1])){
+		if (varyA[3] <= 0 || varyA[3] <= -(varyA[2])){
 			//only 2 vertices are clipped
-			if (varyB[2] <= 0 || varyB[2] <= -(varyB[1]))
+			if (varyB[3] <= 0 || varyB[3] <= -(varyB[2]))
 			{
 				//only render if vertexC is not clipped
-				if (varyC[2] >= 0 && varyC[2] >= -(varyC[1]))
+				if (varyC[3] >= 0 && varyC[3] >= -(varyC[2]))
 				{
-					t1 = (varyA[1] + varyA[2]) / (varyA[1] + varyA[2] - varyC[1] - varyC[2]);
-					t2 = (varyB[1] + varyB[2]) / (varyB[1] + varyB[2] - varyC[1] - varyC[2]);
+					t1 = (varyA[2] + varyA[3]) / (varyA[2] + varyA[3] - varyC[2] - varyC[3]);
+					t2 = (varyB[2] + varyB[3]) / (varyB[2] + varyB[3] - varyC[2] - varyC[3]);
 
-					//compute tempA
-					//tempA = a + t(b-a)
+					//compute tempA–
+					//tempA = a + t(c-a)
 					vecSubtract(sha->varyDim, varyC, varyA, tempA);
-					vecScale(sha->varyDim, t1, tempA);
+					vecScale(sha->varyDim, t1, tempA, tempA);
 					vecAdd(sha->varyDim, varyA, tempA, tempA);
 
 					//tempB
 					vecSubtract(sha->varyDim, varyC, varyB, tempB);
-					vecScale(sha->varyDim, t2, tempB);
+					vecScale(sha->varyDim, t2, tempB, tempB);
 					vecAdd(sha->varyDim, varyB, tempB, tempB);
 				
 					triClippedRender(buf, viewport, sha, unif, tex, tempA, tempB, varyC);
@@ -305,76 +304,100 @@ void meshRender(
 			//only a is clipped, so we need to separate into 2 different triangles
 			else
 			{
-				t1 = (varyA[1] + varyA[2]) / (varyA[1] + varyA[2] - varyB[1] - varyB[2]);
-				t2 = (varyA[1] + varyA[2]) / (varyA[1] + varyA[2] - varyC[1] - varyC[2]);
+				t1 = (varyA[2] + varyA[3]) / (varyA[2] + varyA[3] - varyC[2] - varyC[3]);
+				t2 = (varyA[2] + varyA[3]) / (varyA[2] + varyA[3] - varyB[2] - varyB[3]);
 
 				//scaling varyings, then calling triRender on all of these
-				vecScale(sha->varyDim, t1, varyA, tempA);
+				vecSubtract(sha->varyDim, varyC, varyA, tempA);
+				vecScale(sha->varyDim, t1, tempA, tempA);
+				vecAdd(sha->varyDim, varyA, tempA, tempA);
 				triClippedRender(buf, viewport, sha, unif, tex, tempA, varyB, varyC);
-
+				
 				//rendering the second triangle
-				vecScale(sha->varyDim, t2, varyA, tempA);
+				vecSubtract(sha->varyDim, varyB, varyA, tempA);
+				vecScale(sha->varyDim, t2, tempA, tempA);
+				vecAdd(sha->varyDim, varyA, tempA, tempA);
 				triClippedRender(buf, viewport, sha, unif, tex, tempA, varyB, varyC);
 			}
 		}
 		//handle these for when B is clipped
-		else if (varyB[2] <= 0 || varyB[2] <= -(varyB[1]))
+		else if (varyB[3] <= 0 || varyB[3] <= -(varyB[2]))
 		{
 			//only 2 vertices are clipped
-			if (varyC[2] <= 0 || varyC[2] <= -(varyC[1]))
+			if (varyC[3] <= 0 || varyC[3] <= -(varyC[2]))
 			{
 				//only render if vertexA is not also clipped
-				if (varyA[2] >= 0 && varyA[2] >= -(varyA[1]))
+				if (varyA[3] >= 0 && varyA[3] >= -(varyA[2]))
 				{
-					t1 = (varyB[1] + varyB[2]) / (varyB[1] + varyB[2] - varyA[1] - varyA[2]);
-					t2 = (varyC[1] + varyC[2]) / (varyC[1] + varyC[2] - varyA[1] - varyA[2]);
-					vecScale(sha->varyDim, t1, varyB, varyB);
-					vecScale(sha->varyDim, t2, varyC, varyC);
-					triClippedRender(buf, viewport, sha, unif, tex, varyA, varyB, varyC);
+					t1 = (varyB[2] + varyB[3]) / (varyB[2] + varyB[3] - varyA[2] - varyA[3]);
+					t2 = (varyC[2] + varyC[3]) / (varyC[2] + varyC[3] - varyA[2] - varyA[3]);
+
+					vecSubtract(sha->varyDim, varyA, varyB, tempB);
+					vecScale(sha->varyDim, t1, tempB, tempB);
+					vecAdd(sha->varyDim, varyB, tempB, tempB);
+
+					vecSubtract(sha->varyDim, varyA, varyC, tempC);
+					vecScale(sha->varyDim, t2, tempC, tempC);
+					vecAdd(sha->varyDim, varyC, tempC, tempC);
+
+					triClippedRender(buf, viewport, sha, unif, tex, varyA, tempB, tempC);
+		
 				}
 			}
 			else
 			{
-				double tempB[sha->varyDim];
-				t1 = (varyB[1] + varyB[2]) / (varyB[1] + varyB[2] - varyA[1] - varyA[2]);
-				t2 = (varyB[1] + varyB[2]) / (varyB[1] + varyB[2] - varyC[1] - varyC[2]);
+				t1 = (varyB[2] + varyB[3]) / (varyB[2] + varyB[3] - varyA[2] - varyA[3]);
+				t2 = (varyB[2] + varyB[3]) / (varyB[2] + varyB[3] - varyC[2] - varyC[3]);
 
-				//scaling varyings, then calling triRender on all of these
-				vecScale(sha->varyDim, t1, varyB, tempB);
-				triClippedRender(buf, viewport, sha, unif, tex, varyA, tempB, varyC);
+				vecSubtract(sha->varyDim, varyA, varyB, tempB);
+				vecScale(sha->varyDim, t1, tempB, tempB);
+				vecAdd(sha->varyDim, varyB, tempB, tempB);
+				triClippedRender(buf, viewport, sha, unif, tex, tempA, tempB, varyC);
 
 				//rendering the second triangle
-				vecScale(sha->varyDim, t2, varyB, tempB);
-				triClippedRender(buf, viewport, sha, unif, tex, varyA, tempB, varyC);
+				vecSubtract(sha->varyDim, varyC, varyB, tempB);
+				vecScale(sha->varyDim, t2, tempB, tempB);
+				vecAdd(sha->varyDim, varyB, tempB, tempB);
+				triClippedRender(buf, viewport, sha, unif, tex, tempA, tempB, varyC);
+
 			}
 		}
-		else if (varyC[2] <= 0 || varyC[2] <= -(varyC[1]))
+		else if (varyC[3] <= 0 || varyC[3] <= -(varyC[2]))
 		{
 			//2 vertices are clipped
-			if (varyA[2] <= 0 || varyA[2] <= -(varyA[1]))
+			if (varyA[3] <= 0 || varyA[3] <= -(varyA[2]))
 			{
 				//only render if vertexB is not clipped
-				if (varyB[2] >= 0 && varyB[2] >= -(varyB[1]))
+				if (varyB[3] >= 0 && varyB[3] >= -(varyB[2]))
 				{
-					t1 = (varyC[1] + varyC[2]) / (varyC[1] + varyC[2] - varyB[1] - varyB[2]);
-					t2 = (varyA[1] + varyA[2]) / (varyA[1] + varyA[2] - varyB[1] - varyB[2]);
-					vecScale(sha->varyDim, t1, varyC, varyC);
-					vecScale(sha->varyDim, t2, varyA, varyA);
-					triClippedRender(buf, viewport, sha, unif, tex, varyA, varyB, varyC);
+					t1 = (varyC[2] + varyC[3]) / (varyC[2] + varyC[3] - varyB[2] - varyB[3]);
+					t2 = (varyA[2] + varyA[3]) / (varyA[2] + varyA[3] - varyB[2] - varyB[3]);
+
+					vecSubtract(sha->varyDim, varyB, varyC, tempC);
+					vecScale(sha->varyDim, t1, tempC, tempC);
+					vecAdd(sha->varyDim, varyC, tempC, tempC);
+
+					vecSubtract(sha->varyDim, varyB, varyA, tempA);
+					vecScale(sha->varyDim, t2, tempA, tempA);
+					vecAdd(sha->varyDim, varyA, tempA, tempA);
+		
+					triClippedRender(buf, viewport, sha, unif, tex, tempA, varyB, tempC);
 				}
 			}
 			else
 			{
-				double tempC[sha->varyDim];
-				t1 = (varyC[1] + varyC[2]) / (varyC[1] + varyC[2] - varyB[1] - varyB[2]);
-				t2 = (varyC[1] + varyC[2]) / (varyC[1] + varyC[2] - varyA[1] - varyA[2]);
+				t1 = (varyC[2] + varyC[3]) / (varyC[2] + varyC[3] - varyB[2] - varyB[3]);
+				t2 = (varyC[2] + varyC[3]) / (varyC[2] + varyC[3] - varyA[2] - varyA[3]);
 
-				//scaling varyings, then calling triRender on all of these
-				vecScale(sha->varyDim, t1, varyC, tempC);
+				vecSubtract(sha->varyDim, varyB, varyC, tempC);
+				vecScale(sha->varyDim, t1, tempC, tempC);
+				vecAdd(sha->varyDim, varyC, tempC, tempC);
 				triClippedRender(buf, viewport, sha, unif, tex, varyA, varyB, tempC);
 
 				//rendering the second triangle
-				vecScale(sha->varyDim, t2, varyC, tempC);
+				vecSubtract(sha->varyDim, varyA, varyC, tempC);
+				vecScale(sha->varyDim, t2, tempC, tempC);
+				vecAdd(sha->varyDim, varyC, tempC, tempC);
 				triClippedRender(buf, viewport, sha, unif, tex, varyA, varyB, tempC);
 			}
 		}
