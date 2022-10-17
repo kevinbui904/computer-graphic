@@ -12,7 +12,7 @@ struct isoIsometry {
 	double translation[3];
 	double rotation[3][3];
 };
-
+ 
 /* Sets the rotation. */
 void isoSetRotation(isoIsometry *iso, const double rot[3][3]) {
 	vecCopy(9, (double *)rot, (double *)(iso->rotation));
@@ -80,9 +80,8 @@ void isoGetInverseHomogeneous(const isoIsometry *iso, double homogInv[4][4]) {
 				the negative of inverseRoation times 
 				the translation vector
 	*/
-	double inverseRotation[3][3], inverseTranslation[3], test[3][3];
+	double inverseRotation[3][3], inverseTranslation[3];
 	mat33Transpose(iso->rotation, inverseRotation);
-	mat333Multiply(iso->rotation, inverseRotation, test);
 	mat331Multiply(inverseRotation, iso->translation, inverseTranslation);
 	vecScale(3, -1, inverseTranslation, inverseTranslation);
 	mat44Isometry(inverseRotation, inverseTranslation, homogInv);
