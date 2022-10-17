@@ -207,12 +207,28 @@ void handleKeyUp(
         case GLFW_KEY_O:
             fovy -= M_PI/180;
             rho -= 0.2;
+
+			if(fovy <= 0){
+				fovy -= M_PI/180;
+			}
+			if (rho <= 0){
+				rho -= 0.2;
+			}
+			printf("fovy: %f\n", fovy);
+			printf("rho: %f\n", rho);
             render();
             break; 
         
         case GLFW_KEY_L:
             fovy += M_PI/180;
             rho += 0.2;
+
+			if(fovy <= 0){
+				fovy += M_PI/180;
+			}
+			if (rho <= 0){
+				rho += 0.2;
+			}
             render();
             break;
 		default:
