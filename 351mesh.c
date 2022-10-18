@@ -226,8 +226,12 @@ void triClippedRender(depthBuffer *buf, const double viewport[4][4], const shaSh
         vecScale(sha->varyDim, 1/viewportA[3], varyA, varyA);
         vecScale(sha->varyDim, 1/viewportB[3], varyB, varyB);
         vecScale(sha->varyDim, 1/viewportC[3], varyC, varyC);
-
+		printf("varyA: %f\n", varyA[0]);
+		exit(1);
+		printf("before trirender\n");
 	    triRender(sha, buf, unif, tex, varyA, varyB, varyC);
+		printf("dies after triRender\n");
+
 }
 /*** Rendering ***/
 
@@ -266,11 +270,13 @@ void meshRender(
         triPointer = meshGetTrianglePointer(mesh, triNumber);
         for(int i = 0; i < 3; i += 1){
             vertices[i] = meshGetVertexPointer(mesh, triPointer[i]);
+			printf("vertices num: %i\n", i);
         }   
 		sha->shadeVertex(sha->unifDim, unif, sha->attrDim, vertices[0], sha->varyDim, varyA);
 		sha->shadeVertex(sha->unifDim, unif, sha->attrDim, vertices[1], sha->varyDim, varyB);
 		sha->shadeVertex(sha->unifDim, unif, sha->attrDim, vertices[2], sha->varyDim, varyC);
         
+		printf("triNumber: %d\n", triNumber);
 		//handle clipping 
 
 		//if vertexA is clipped
@@ -278,6 +284,7 @@ void meshRender(
 		
 		// t = (a2 + a3) / (a2 + a3 - b2 - b3
 		if (varyA[3] <= 0 || varyA[3] <= -(varyA[2])){
+			printf("inside varyA clip\n");
 			//only 2 vertices are clipped
 			if (varyB[3] <= 0 || varyB[3] <= -(varyB[2]))
 			{
@@ -293,7 +300,6 @@ void meshRender(
 					vecScale(sha->varyDim, t1, tempA, tempA);
 					vecAdd(sha->varyDim, varyA, tempA, tempA);
 
-					//tempB
 					vecSubtract(sha->varyDim, varyC, varyB, tempB);
 					vecScale(sha->varyDim, t2, tempB, tempB);
 					vecAdd(sha->varyDim, varyB, tempB, tempB);
@@ -323,6 +329,7 @@ void meshRender(
 		//handle these for when B is clipped
 		else if (varyB[3] <= 0 || varyB[3] <= -(varyB[2]))
 		{
+			printf("inside varyB clip\n");
 			//only 2 vertices are clipped
 			if (varyC[3] <= 0 || varyC[3] <= -(varyC[2]))
 			{
@@ -346,13 +353,19 @@ void meshRender(
 			}
 			else
 			{
+				printf("inside 1 vertices clip\n");
+
 				t1 = (varyB[2] + varyB[3]) / (varyB[2] + varyB[3] - varyA[2] - varyA[3]);
 				t2 = (varyB[2] + varyB[3]) / (varyB[2] + varyB[3] - varyC[2] - varyC[3]);
+
+				printf("(t1, t2): %f, %f\n", t1, t2);
 
 				vecSubtract(sha->varyDim, varyA, varyB, tempB);
 				vecScale(sha->varyDim, t1, tempB, tempB);
 				vecAdd(sha->varyDim, varyB, tempB, tempB);
+			
 				triClippedRender(buf, viewport, sha, unif, tex, varyA, tempB, varyC);
+				printf("dies here inside first render\n");
 
 				//rendering the second triangle
 				vecSubtract(sha->varyDim, varyC, varyB, tempB);

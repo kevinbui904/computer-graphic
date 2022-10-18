@@ -164,6 +164,8 @@ void camGetProjectionInverseIsometry(const camCamera *cam, double homog[4][4]) {
 	else{
 		camGetPerspective(cam, proj);
 		mat444Multiply(proj, camInverseIsom, homog);
+		mat44Print(homog);
+		printf("here======\n");
 	}
 
 }

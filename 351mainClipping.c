@@ -2,7 +2,7 @@
 
 
 /* On macOS, compile with...
-    clang 350mainClipping.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 351mainClipping.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
     cc 350mainClipping.c 040pixel.o -lglfw -lGL -lm -ldl
 */
@@ -20,12 +20,12 @@ On Ubuntu, compile with...
 #include "150texture.c"
 #include "260shading.c"
 #include "260depth.c"
-#include "270triangle.c"
-#include "350mesh.c"
+#include "271triangle.c"
+#include "351mesh.c"
 #include "190mesh2D.c"
 #include "250mesh3D.c"
 #include "300isometry.c"
-#include "300camera.c"
+#include "310camera.c"
 #include "340landscape.c"
 
 #define LANDSIZE 40
@@ -111,6 +111,8 @@ void render(void) {
 	camGetProjectionInverseIsometry(&cam, projInvIsom);
     vecCopy(16, (double *)projInvIsom, &unif[UNIFPROJINVISOM]);
 	meshRender(&landMesh, &buf, viewport, &sha, unif, tex);
+	printf("dies here in meshRender, called from render\n");
+
 }
 
 void handleKeyUp(
@@ -149,10 +151,6 @@ void handleKeyDownAndRepeat(
         position[2] -= 1.0;
     else if (key == GLFW_KEY_E)
         position[2] += 1.0;
-	position[0] = -0.125085;
-	position[1] = 4.267220;
-	position[2] = 9.000000;
-	angle = 0.523599;
     camLookFrom(&cam, position, M_PI * 0.6, angle);
 }
 
@@ -217,7 +215,10 @@ int main(void) {
     mat44Viewport(512, 512, viewport);
     camSetProjectionType(&cam, camPERSPECTIVE);
     camSetFrustum(&cam, M_PI / 6.0, 10.0, 10.0, 512, 512);
-    double position[3] = {-5.0, -5.0, 20.0};
+
+	angle = 0.523599; //roughly pi/6;
+	double position[3] = {-0.125085,4.267220, 9.000000};
+    // double position[3] = {-5.0, -5.0, 20.0};
     camLookFrom(&cam, position, M_PI * 0.6, angle);
 	/* Run user interface. */
     render();
