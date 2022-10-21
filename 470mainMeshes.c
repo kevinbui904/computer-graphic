@@ -108,20 +108,8 @@ swapChain swap;
 to hold the shader program. */
 shaProgram shaProg;
 
-/* Our meshes are assumed to use a single attribute style: three attributes of 
-dimensions 3 (xyz), 3 (rgb), 2 (st). */
-// typedef struct veshStyle veshStyle;
-// struct veshStyle {
-//     VkVertexInputBindingDescription bindingDesc;
-//     VkVertexInputAttributeDescription *attrDescs;
-//     VkPipelineVertexInputStateCreateInfo vertexInputInfo;
-//     VkPipelineInputAssemblyStateCreateInfo inputAssembly;
-// };
 
 veshStyle vStyle;
-
-#define VESHNUMATTRS 3
-int veshAttrDims[VESHNUMATTRS] = {3, 3, 2};
 
 
 // #define MESHNUMATTRS 3
@@ -184,48 +172,46 @@ int veshAttrDims[VESHNUMATTRS] = {3, 3, 2};
 veshVesh veshA;
 veshVesh veshB;
 
+
 /* Initializes the artwork. Upon success (return code 0), don't forget to 
 finalizeArtwork later. */
 int initializeArtwork() {
     if (shaInitialize(&shaProg, "470vert.spv", "460frag.spv") != 0) {
         return 6;
     }
-
-    // veshInitializeStyle(veshStyle *style, int numAttr, const int attrDims[])
+    //veshes attributes
+    int vNumAttr = 3;
+    int vAttrDims[3] = {3, 2, 3};
     //Replace meshGetStyle with veshInitializeStyle
-    // int vNumAttr = 3;
-    // int vAttrDims[3] = {3, 2, 3};
-    veshInitializeStyle(&vStyle, VESHNUMATTRS, veshAttrDims);
+    veshInitializeStyle(&vStyle, vNumAttr, vAttrDims);
 
-    meshMesh meshA;
+    meshMesh meshA, meshB;
 
-    if (mesh3DInitializeCapsule(&meshA, 5, 8, 50, 50)){
+    if (mesh3DInitializeCapsule(&meshA, 2, 1, 50, 50)){
         shaFinalize(&shaProg);
         return 5;
     }
 
-    // meshMesh meshB;
-
-    // if (mesh3DInitializeBox(&meshB, -3.0, -1.0, -2.0, 0.0, -7.0, -6.0)){
-    //     shaFinalize(&shaProg);
-    //     meshFinalize(&meshA);
-    //     return 4;
-    // }
+    if (mesh3DInitializeBox(&meshB, -3.0, -1.0, -2.0, 0.0, -7.0, -6.0)){
+        shaFinalize(&shaProg);
+        meshFinalize(&meshA);
+        return 4;
+    }
 
     if (veshInitializeMesh(&veshA, &meshA) != 0) {
         shaFinalize(&shaProg);
         meshFinalize(&meshA);
-        // meshFinalize(&meshB);
+        meshFinalize(&meshB);
         return 3;
     }
 
-    // if (veshInitializeMesh(&veshB, &meshB) != 0) {
-    //     shaFinalize(&shaProg);
-    //     meshFinalize(&meshA);
-    //     meshFinalize(&meshB);
-    //     veshFinalize(&veshA);
-    //     return 2;
-    // }
+    if (veshInitializeMesh(&veshB, &meshB) != 0) {
+        shaFinalize(&shaProg);
+        meshFinalize(&meshA);
+        meshFinalize(&meshB);
+        veshFinalize(&veshA);
+        return 2;
+    }
     return 0;
 }
 
@@ -476,26 +462,9 @@ int initializeCommandBuffers() {
             connCommandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS, 
             connGraphicsPipeline);
         /* Render a mesh. */
-        veshRender(&veshA, *connCommandBuffers);
-        veshRender(&veshB, *connCommandBuffers);
+        veshRender(&veshA, connCommandBuffers[i]);
+        veshRender(&veshB, connCommandBuffers[i]);
 
-        // VkDeviceSize offsets[] = {0};
-        // VkBuffer vertexBuffers[] = {meshVertBufA};
-        // vkCmdBindVertexBuffers(
-        //     connCommandBuffers[i], 0, 1, vertexBuffers, offsets);
-        // vkCmdBindIndexBuffer(
-        //     connCommandBuffers[i], meshTriBufA, 0, VK_INDEX_TYPE_UINT16);
-        // vkCmdDrawIndexed(
-        //     connCommandBuffers[i], (uint32_t)(meshNumTrisA * 3), 1, 0, 0, 0);
-        // /* Render another mesh. */
-        // vertexBuffers[0] = meshVertBufB;
-        // vkCmdBindVertexBuffers(
-        //     connCommandBuffers[i], 0, 1, vertexBuffers, offsets);
-        // vkCmdBindIndexBuffer(
-        //     connCommandBuffers[i], meshTriBufB, 0, VK_INDEX_TYPE_UINT16);
-        // vkCmdDrawIndexed(
-        //     connCommandBuffers[i], (uint32_t)(meshNumTrisB * 3), 1, 0, 0, 0);
-        /* End render pass and command buffer. */
         vkCmdEndRenderPass(connCommandBuffers[i]);
         if (vkEndCommandBuffer(connCommandBuffers[i]) != VK_SUCCESS) {
             fprintf(stderr, "error: initializeCommandBuffers: ");
@@ -521,10 +490,12 @@ when you're done. */
 int initializeConnection() {
     if (initializePipeline(&shaProg, &vStyle.vertexInputInfo, &vStyle.inputAssembly) != 0)
         return 2;
+
     if (initializeCommandBuffers() != 0) {
         finalizePipeline();
         return 1;
     }
+ 
     return 0;
 }
 
@@ -644,17 +615,20 @@ int main() {
         guiFinalize(&gui);
         return 4;
     }
+
     if (swapInitialize(&swap) != 0) {
         vulFinalize(&vul);
         guiFinalize(&gui);
         return 3;
     }
+  
     if (initializeArtwork() != 0) {
         swapFinalize(&swap);
         vulFinalize(&vul);
         guiFinalize(&gui);
         return 2;
     }
+
     /* New: Initialize the connection after the swap chain and scene. */
     if (initializeConnection() != 0) {
         finalizeArtwork();
@@ -663,6 +637,8 @@ int main() {
         guiFinalize(&gui);
         return 1;
     }
+    // printf("initializeConnection\n");
+    // exit(1);
     guiSetFramePresenter(&gui, presentFrame);
     guiRun(&gui);
     vkDeviceWaitIdle(vul.device);

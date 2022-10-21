@@ -180,6 +180,10 @@ vesh is initialized, the mesh can be finalized; the vesh doesn't need the mesh
 to be kept around long-term. */
 int veshInitializeMesh(veshVesh *vesh, meshMesh *mesh) {
 
+    vesh->triNum = mesh->triNum;
+    vesh->vertNum = mesh->vertNum;
+    vesh->attrDim = mesh->attrDim;
+ 
     if (veshInitializeVertexBuffer(
             &(vesh->vertBuf), &(vesh->vertBufMem), vesh->attrDim, vesh->vertNum, 
             mesh->vert) != 0) {
