@@ -299,6 +299,7 @@ void setBodyUniforms(uint32_t imageIndex) {
 
     /*
     NEW (KB+SL): Make the first body move closer to the second body
+        the sin function will make this action oscillate over time
     */
     BodyUniforms *bodyUnifs = (BodyUniforms *)unifGetAligned(&aligned, 0);
     float identity[4][4] = {
@@ -309,7 +310,7 @@ void setBodyUniforms(uint32_t imageIndex) {
     for (int i = 0; i < 4; i += 1)
         for (int j = 0; j < 4; j += 1)
             bodyUnifs->modelingT[i][j] = identity[j][i];
-    /* Place a (transposed) rotation into the second body's modeling matrix. */
+    /* same as the first body unform, this one just go in the opposite direction */
     bodyUnifs = (BodyUniforms *)unifGetAligned(&aligned, 1);
     float rotation[4][4] = {
         {1.0, 0.0, 0.0, -sin(soFarTime)/4},                           // row 0, not column 0
