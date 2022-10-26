@@ -56,3 +56,6 @@ dkms.conf
 
 #mac
 .DS_Store
+
+#compiled shader files
+.spv
