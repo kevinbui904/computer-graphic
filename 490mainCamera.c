@@ -44,8 +44,6 @@ If you see errors, then try changing ANISOTROPY to 0 and/or MAXFRAMESINFLIGHT to
 #include <sys/time.h>
 #include <math.h>
 
-
-
 /*** CONFIGURATION ************************************************************/
 
 /* Informational messages should (1) or shouldn't (0) be printed to stderr. */
@@ -109,7 +107,7 @@ CPU side connect to uniforms in the shaders. */
 #include "490isometry.c"
 #include "490camera.c"
 
-float rho = 10.0, phi = 0.0, theta = -(M_PI/2);
+float rho = 10.0, phi = M_PI/3, theta = -(M_PI/2);
 
 /*** ARTWORK ******************************************************************/
 
@@ -251,6 +249,18 @@ struct SceneUniforms {
     float cameraT[4][4];
 };
 
+
+/*
+New (KB + SL): configure camCamera
+*/
+camCamera camera;
+float camProjection[4][4];
+/*
+NEW (KB+SL): get this target from 480shader.vert, look at the second to last row of modeling matrix
+the target should be at (0,0,0)
+*/
+float target[3] = {0.0, 0.0, 0.0};
+
 /* These dynamically allocated arrays have length swap.numImages. They hold the 
 uniform values on the GPU side. */
 VkBuffer *sceneUniformBuffers;
@@ -266,19 +276,6 @@ void setSceneUniforms(uint32_t imageIndex) {
     sceneUnifs.color[1] = 1.0;
     sceneUnifs.color[2] = 1.0;
     sceneUnifs.color[3] = 1.0;
-
-    /*
-    New (KB + SL): configure camCamera
-    */
-    camCamera camera;
-    camSetProjectionType(&camera, camPERSPECTIVE);
-    camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
-    float camProjection[4][4];
-    /*
-    NEW (KB+SL): get this target from 480shader.vert, look at the second to last row of modeling matrix
-    the target should be at (0,0,0)
-    */
-    float target[3] = {0.0, 0.0, 0.0};
 
     camLookAt(&camera, target, rho, phi, theta);
     /* Transpose that camera matrix into the scene UBO. */
@@ -669,6 +666,43 @@ void finalizeConnection() {
     finalizeUniforms();
 }
 
+/*
+    NEW (KB + SL): helper for GLFW key usage
+*/
+/*** USER INTERFACE ***********************************************************/
+
+/* A frivolous example of how to handle keyboard presses. For more details, 
+consult the GLFW documentation online. */
+void handleKey(
+        GLFWwindow *window, int key, int scancode, int action, int mods) {
+    /* Detect which modifier keys are down. */
+    int shiftIsDown, controlIsDown, altOptionIsDown, superCommandIsDown;
+    shiftIsDown = mods & GLFW_MOD_SHIFT;
+    controlIsDown = mods & GLFW_MOD_CONTROL;
+    altOptionIsDown = mods & GLFW_MOD_ALT;
+    superCommandIsDown = mods & GLFW_MOD_SUPER;
+    /* Print silly messages. */
+    if (action == GLFW_PRESS && key == GLFW_KEY_L)
+        theta += M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_J)
+        theta -= M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_DOWN)
+        phi -= M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_UP)
+        phi += M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_P){
+        if (camera.projectionType == camORTHOGRAPHIC){
+            camSetProjectionType(&camera, camPERSPECTIVE);
+            camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
+        }
+        else{
+            camSetProjectionType(&camera, camORTHOGRAPHIC);
+            camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
+
+        }
+        printf("currentProjection: %d\n", camera.projectionType);
+    }
+}
 
 
 /*** MAIN *********************************************************************/
@@ -796,6 +830,17 @@ int main() {
         guiFinalize(&gui);
         return 1;
     }
+    /*
+    NEW (KB + SL): configure camera
+    */
+    camSetProjectionType(&camera, camPERSPECTIVE);
+    camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
+
+    /*
+    NEW (KB+SL): bind keyUpHandler
+    */
+    glfwSetKeyCallback(gui.window, handleKey);
+
     guiSetFramePresenter(&gui, presentFrame);
     guiRun(&gui);
     vkDeviceWaitIdle(vul.device);

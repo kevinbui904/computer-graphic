@@ -64,7 +64,8 @@ void camGetOrthographic(const camCamera *cam, float proj[4][4]) {
 	float top = cam->projection[camPROJT];
 	float far = cam->projection[camPROJF];
 	float near = cam->projection[camPROJN];
-    mat44Zero(proj);
+	
+    mat44Zero(preVulkanized);
     preVulkanized[0][0] = 2.0 / (right - left);
 	preVulkanized[0][3] = (-right - left) / (right - left);
 	preVulkanized[1][1] = 2.0 / (top - bottom);
@@ -96,7 +97,7 @@ void camGetPerspective(const camCamera *cam, float proj[4][4]) {
 	float top = cam->projection[camPROJT];
 	float far = cam->projection[camPROJF];
 	float near = cam->projection[camPROJN];
-    mat44Zero(proj);
+    mat44Zero(preVulkanized);
     preVulkanized[0][0] = (-2.0 * near)/(right - left);
 	preVulkanized[0][3] = (right + left) / (right - left);
 	preVulkanized[1][1] = (-2.0 * near) / (top - bottom);
