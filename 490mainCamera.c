@@ -666,45 +666,6 @@ void finalizeConnection() {
     finalizeUniforms();
 }
 
-/*
-    NEW (KB + SL): helper for GLFW key usage
-*/
-/*** USER INTERFACE ***********************************************************/
-
-/* A frivolous example of how to handle keyboard presses. For more details, 
-consult the GLFW documentation online. */
-void handleKey(
-        GLFWwindow *window, int key, int scancode, int action, int mods) {
-    /* Detect which modifier keys are down. */
-    int shiftIsDown, controlIsDown, altOptionIsDown, superCommandIsDown;
-    shiftIsDown = mods & GLFW_MOD_SHIFT;
-    controlIsDown = mods & GLFW_MOD_CONTROL;
-    altOptionIsDown = mods & GLFW_MOD_ALT;
-    superCommandIsDown = mods & GLFW_MOD_SUPER;
-    /* Print silly messages. */
-    if (action == GLFW_PRESS && key == GLFW_KEY_L)
-        theta += M_PI/180.0;
-    else if (action == GLFW_PRESS && key == GLFW_KEY_J)
-        theta -= M_PI/180.0;
-    else if (action == GLFW_PRESS && key == GLFW_KEY_DOWN)
-        phi -= M_PI/180.0;
-    else if (action == GLFW_PRESS && key == GLFW_KEY_UP)
-        phi += M_PI/180.0;
-    else if (action == GLFW_PRESS && key == GLFW_KEY_P){
-        if (camera.projectionType == camORTHOGRAPHIC){
-            camSetProjectionType(&camera, camPERSPECTIVE);
-            camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
-        }
-        else{
-            camSetProjectionType(&camera, camORTHOGRAPHIC);
-            camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
-
-        }
-        printf("currentProjection: %d\n", camera.projectionType);
-    }
-}
-
-
 /*** MAIN *********************************************************************/
 
 /* Called by presentFrame. Returns an error code (0 on success). On success, 
@@ -721,6 +682,12 @@ int reinitializeSwapChain() {
     swapFinalize(&swap);
     if (swapInitialize(&swap) != 0)
         return 2;
+
+    /*
+        NEW (KB+SL): recalculate the image so that it doesn't change based on window size
+    */
+    camSetFrustum(&camera, M_PI/6, 10.0, 10.0, swap.extent.width, swap.extent.height);
+
     if (initializeConnection() != 0) {
         swapFinalize(&swap);
         return 1;
@@ -805,6 +772,49 @@ int presentFrame() {
     return 0;
 }
 
+/*
+    NEW (KB + SL): helper for GLFW key usage
+*/
+/*** USER INTERFACE ***********************************************************/
+
+void handleKey(
+        GLFWwindow *window, int key, int scancode, int action, int mods) {
+    /* Detect which modifier keys are down. */
+    int shiftIsDown, controlIsDown, altOptionIsDown, superCommandIsDown;
+    shiftIsDown = mods & GLFW_MOD_SHIFT;
+    controlIsDown = mods & GLFW_MOD_CONTROL;
+    altOptionIsDown = mods & GLFW_MOD_ALT;
+    superCommandIsDown = mods & GLFW_MOD_SUPER;
+    /* Print silly messages. */
+    if (action == GLFW_PRESS && key == GLFW_KEY_L)
+        theta += M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_J)
+        theta -= M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_DOWN)
+        phi -= M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_UP)
+        phi += M_PI/180.0;
+    else if (action == GLFW_PRESS && key == GLFW_KEY_P){
+        if (camera.projectionType == camORTHOGRAPHIC){
+            camSetProjectionType(&camera, camPERSPECTIVE);
+            camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
+        }
+        else{
+            camSetProjectionType(&camera, camORTHOGRAPHIC);
+            camSetFrustum(&camera, M_PI/6, 10.0, 10.0, 512, 512);
+
+        }
+        printf("currentProjection: %d\n", camera.projectionType);
+    }
+}
+/*
+    NEW (KB+SL): helper used to detect window resize
+*/
+void handleWindowResize(GLFWwindow *window, int width, int height){
+    reinitializeSwapChain();
+
+}
+
 int main() {
     if (guiInitialize(&gui, 512, 512, "Vulkan") != 0)
         return 5;
@@ -840,6 +850,7 @@ int main() {
     NEW (KB+SL): bind keyUpHandler
     */
     glfwSetKeyCallback(gui.window, handleKey);
+    glfwSetWindowSizeCallback(gui.window, handleWindowResize);
 
     guiSetFramePresenter(&gui, presentFrame);
     guiRun(&gui);
