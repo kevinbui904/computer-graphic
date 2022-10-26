@@ -111,64 +111,6 @@ shaProgram shaProg;
 
 veshStyle vStyle;
 
-
-// #define MESHNUMATTRS 3
-// int meshAttrDims[MESHNUMATTRS] = {3, 3, 2};
-// /* Several variables are needed to pass that mesh style to Vulkan. */
-// int meshTotalAttrDim;
-// VkPipelineVertexInputStateCreateInfo vertexInputInfo;
-// VkPipelineInputAssemblyStateCreateInfo inputAssembly;
-// VkVertexInputBindingDescription meshBindingDesc;
-// VkVertexInputAttributeDescription meshAttrDescs[MESHNUMATTRS];
-
-// /* Here is a specific mesh with eight vertices and four triangles. The vertices 
-// are packed into the vertex data array one after another. The 0th row is the 
-// first vertex, the 1th row is the second, and so on. Similarly, the triangles are 
-// packed into the triangle data array one after another. Each triangle consists of 
-// three indices into the vertex array. */
-// int meshNumVertsA = 8;
-// const float meshVertsA[] = {
-//     -0.5, -0.5, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 
-//     0.5, -0.5, 0.0, 0.0, 1.0, 0.0, 1.0, 0.0, 
-//     0.5, 0.5, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, 
-//     -0.5, 0.5, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 
-//     -0.5, -0.5, 0.5, 1.0, 0.0, 0.0, 0.0, 0.0, 
-//     0.5, -0.5, 0.5, 0.0, 1.0, 0.0, 1.0, 0.0, 
-//     0.5, 0.5, 0.5, 0.0, 0.0, 1.0, 1.0, 1.0, 
-//     -0.5, 0.5, 0.5, 1.0, 1.0, 1.0, 0.0, 1.0
-// };
-// int meshNumTrisA = 4;
-// const uint16_t meshTrisA[] = {
-//     0, 1, 2, 
-//     2, 3, 0, 
-//     4, 5, 6, 
-//     6, 7, 4, 
-// };
-// VkBuffer veshVertBufA;
-// VkDeviceMemory veshVertBufMemA;
-// VkBuffer veshTriBufA;
-// VkDeviceMemory veshTriBufMemA;
-
-// /* Here is another specific mesh with four vertices and four triangles. */
-// int meshNumVertsB = 4;
-// const float meshVertsB[] = {
-//     1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0, 
-//     2.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 0.0, 
-//     1.0, 1.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 
-//     1.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0
-// };
-// int meshNumTrisB = 4;
-// const uint16_t meshTrisB[] = {
-//     0, 2, 1, 
-//     0, 1, 3, 
-//     0, 3, 2, 
-//     3, 1, 2, 
-// };
-// VkBuffer meshVertBufB;
-// VkDeviceMemory meshVertBufMemB;
-// VkBuffer meshTriBufB;
-// VkDeviceMemory meshTriBufMemB;
-
 veshVesh veshA;
 veshVesh veshB;
 
