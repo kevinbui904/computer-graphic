@@ -197,8 +197,6 @@ int veshInitializeMesh(veshVesh *vesh, meshMesh *mesh) {
         return 1;
     }
 
-    meshFinalize(mesh);
-
     return 0;
 }
 
