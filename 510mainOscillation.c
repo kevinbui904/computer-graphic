@@ -293,6 +293,14 @@ VkDeviceMemory *bodyUniformBuffersMemory;
 int bodyNum = 2;
 unifAligned aligned;
 
+#include "470vector.c"
+#include "490matrix.c"
+#include "490isometry.c"
+/*
+New (KB+SL): declaring isometries for the body transformations
+*/
+isoIsometry isoSquare;
+isoIsometry isoTriangle;
 /* New: Configures the body uniforms for a single frame. */
 void setBodyUniforms(uint32_t imageIndex) {
     float soFarTime = gui.currentTime - gui.startTime;
@@ -301,25 +309,33 @@ void setBodyUniforms(uint32_t imageIndex) {
     NEW (KB+SL): Make the first body move closer to the second body
         the sin function will make this action oscillate over time
     */
+    float homog[4][4];
+
+    float rot[3][3] = {
+        {1.0, 0.0, 0.0},
+        {0.0, 1.0, 0.0},
+        {0.0, 0.0, 1.0}
+    };
+    float translateSquare[3] = {sin(soFarTime)/4, sin(soFarTime)/4, 0.0};    
+    isoSetRotation(&isoSquare, rot);
+    isoSetTranslation(&isoSquare, translateSquare);
+    isoGetHomogeneous(&isoSquare, homog);
     BodyUniforms *bodyUnifs = (BodyUniforms *)unifGetAligned(&aligned, 0);
-    float identity[4][4] = {
-        {1.0, 0.0, 0.0, sin(soFarTime)/4},                           // row 0, not column 0
-        {0.0, 1.0, 0.0, sin(soFarTime)/4},                           // row 1
-        {0.0, 0.0, 1.0, 0.0},                           // row 2
-        {0.0, 0.0, 0.0, 1.0}};                          // row 3
+
     for (int i = 0; i < 4; i += 1)
         for (int j = 0; j < 4; j += 1)
-            bodyUnifs->modelingT[i][j] = identity[j][i];
+            bodyUnifs->modelingT[i][j] = homog[j][i];
     /* same as the first body unform, this one just go in the opposite direction */
+    float translateTriangle[3] = {-sin(soFarTime)/4, -sin(soFarTime)/4, 0.0};    
+    isoSetRotation(&isoTriangle, rot);
+    isoSetTranslation(&isoTriangle, translateTriangle);
+    isoGetHomogeneous(&isoTriangle, homog);
+    
     bodyUnifs = (BodyUniforms *)unifGetAligned(&aligned, 1);
-    float rotation[4][4] = {
-        {1.0, 0.0, 0.0, -sin(soFarTime)/4},                           // row 0, not column 0
-        {0.0, 1.0, 0.0, -sin(soFarTime)/4},                           // row 1
-        {0.0, 0.0, 1.0, 0.0},                           // row 2
-        {0.0, 0.0, 0.0, 1.0}};                          // row 3
+
     for (int i = 0; i < 4; i += 1)
         for (int j = 0; j < 4; j += 1)
-            bodyUnifs->modelingT[i][j] = rotation[j][i];
+            bodyUnifs->modelingT[i][j] = homog[j][i];
     /* Copy the body UBO bits from the CPU to the GPU. */
     void *data;
     int amount = aligned.uboNum * aligned.alignedSize;
