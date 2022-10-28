@@ -323,10 +323,17 @@ int initializeScene() {
     camSetProjectionType(&camera, camPERSPECTIVE);
     /*
     NEW (KB+SL): configure the body to hold the correct veshes 
+    and for them to use the correct textures
     */
     bodyConfigure(&landBody, &landVesh);
+    landBody.uniforms.texIndices[0] = 0;
+
     bodyConfigure(&waterBody, &waterVesh);
+    waterBody.uniforms.texIndices[0] = 1;
+
     bodyConfigure(&heroBody, &heroVesh);
+    heroBody.uniforms.texIndices[0] = 2;
+
     return 0;
 }
 
@@ -434,12 +441,9 @@ void setBodyUniforms(uint32_t imageIndex) {
         {0.0, 0.0, 1.0, 0.0},                           // row 2
         {0.0, 0.0, 0.0, 1.0}};                          // row 3
     /* The land uses a trivial isometry and the first texture. */
-    
-    landBody.uniforms.texIndices[0] = 0;
     bodySetUniforms(&landBody, &aligned, 0);
 
     /* The water uses a trivial isometry and the second texture. */
-    waterBody.uniforms.texIndices[0] = 1;
     bodySetUniforms(&waterBody, &aligned, 1);
 
     /* The hero has a heading and a location and uses the third texture. */
@@ -452,7 +456,6 @@ void setBodyUniforms(uint32_t imageIndex) {
     isoSetTranslation(&isom, heroPos);
     isoGetHomogeneous(&isom, homog);
     heroBody.isometry = isom;
-    heroBody.uniforms.texIndices[0] = 2;
     bodySetUniforms(&heroBody, &aligned, 2);
 
     /* Copy the body UBO bits from the CPU to the GPU. */
