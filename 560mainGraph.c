@@ -123,7 +123,7 @@ struct BodyUniforms {
 
 /* New: Three veshes using the attribute style XYZ, ST, NOP. */
 veshStyle style;
-veshVesh landVesh, waterVesh, heroVesh, heroHeadVesh;
+veshVesh landVesh, waterVesh, heroVesh, heroHeadVesh, heroEar1Vesh, heroEar2Vesh, heroNoseVesh;
 
 /* New: Elevation data and functions to set them. Keep in mind that each of our 
 veshes is limited to 65,536 triangles. And the landscape and water will each use 
@@ -197,19 +197,69 @@ int initializeVeshes() {
 
     meshFinalize(&mesh);
     /* Make the heroHead vesh */
-    if(mesh3DInitializeSphere(&mesh, 1.0, 16, 32) != 0){
+    if(mesh3DInitializeSphere(&mesh, 0.2, 10, 10) != 0){
         veshFinalize(&landVesh);
         veshFinalize(&heroVesh);
         veshFinalize(&waterVesh);
+        return 7;
     }
     if (veshInitializeMesh(&heroHeadVesh, &mesh) != 0){
         meshFinalize(&mesh);
         veshFinalize(&landVesh);
         veshFinalize(&heroVesh);
         veshFinalize(&waterVesh);
-        return 7;
+        return 8;
     }
     meshFinalize(&mesh);
+
+    if(mesh3DInitializeCapsule(&mesh, 0.1, 0.5, 16, 32) != 0){
+        veshFinalize(&landVesh);
+        veshFinalize(&heroVesh);
+        veshFinalize(&waterVesh);
+        return 9;
+    }
+    if (veshInitializeMesh(&heroEar1Vesh, &mesh) != 0){
+        meshFinalize(&mesh);
+        veshFinalize(&landVesh);
+        veshFinalize(&heroVesh);
+        veshFinalize(&waterVesh);
+        return 10;
+    }
+
+    meshFinalize(&mesh);
+
+    if(mesh3DInitializeCapsule(&mesh, 0.1, 0.5, 16, 32) != 0){
+        veshFinalize(&landVesh);
+        veshFinalize(&heroVesh);
+        veshFinalize(&waterVesh);
+        return 11;
+    }
+    if (veshInitializeMesh(&heroEar2Vesh, &mesh) != 0){
+        meshFinalize(&mesh);
+        veshFinalize(&landVesh);
+        veshFinalize(&heroVesh);
+        veshFinalize(&waterVesh);
+        return 12;
+    }
+
+    meshFinalize(&mesh);
+
+    if(mesh3DInitializeCapsule(&mesh, 0.15, 0.5, 16, 32) != 0){
+        veshFinalize(&landVesh);
+        veshFinalize(&heroVesh);
+        veshFinalize(&waterVesh);
+        return 11;
+    }
+    if (veshInitializeMesh(&heroNoseVesh, &mesh) != 0){
+        meshFinalize(&mesh);
+        veshFinalize(&landVesh);
+        veshFinalize(&heroVesh);
+        veshFinalize(&waterVesh);
+        return 12;
+    }
+
+    meshFinalize(&mesh);
+
     return 0;
 }
 
@@ -329,7 +379,7 @@ void setCamera() {
 }
 
 /* New: We start to build a scene with three bodies. */
-int bodyNum = 4;
+int bodyNum = 7;
 
 /*
     NEW (KB+SL): globals for bfody
@@ -340,6 +390,9 @@ bodyBody waterBody;
 
 bodyBody heroBody;
 bodyBody heroHead;
+bodyBody heroEar1;
+bodyBody heroEar2;
+bodyBody heroNose;
 /* New. Not much here yet. The camera and the hero are part of the scene, but 
 they get updated on each time step automatically. */
 int initializeScene() {
@@ -362,6 +415,12 @@ int initializeScene() {
     heroBody.uniforms.texIndices[0] = 2;
     bodyConfigure(&heroHead, &heroHeadVesh, NULL, NULL);
     heroHead.uniforms.texIndices[0] = 2;
+    bodyConfigure(&heroEar1, &heroEar1Vesh, NULL, NULL);
+    heroEar1.uniforms.texIndices[0] = 2;
+    bodyConfigure(&heroEar2, &heroEar2Vesh, NULL, NULL);
+    heroEar2.uniforms.texIndices[0] = 2;
+    bodyConfigure(&heroNose, &heroNoseVesh, NULL, NULL);
+    heroNose.uniforms.texIndices[0] = 2;
     
     /*
     NEW(KB+SL): Configure the scene graph
@@ -369,6 +428,9 @@ int initializeScene() {
     bodyAddSibling(&heroBody, &landBody);
     bodyAddSibling(&landBody, &waterBody);
     bodyAddChild(&heroBody, &heroHead);
+    bodyAddChild(&heroHead, &heroEar1);
+    bodyAddSibling(&heroEar1, &heroEar2);
+    bodyAddChild(&heroEar1, &heroNose);
     return 0;
 }
 
@@ -490,8 +552,18 @@ void setBodyUniforms(uint32_t imageIndex) {
     /*
     NEW (KB+SL): set the head to be slightly offsetted from body
     */
-    float headOffset[3] = {1.0, 0.0, 1.0};
+    float headOffset[3] = {-0.6, 0.0, -0.7};
     isoSetTranslation(&(heroHead.isometry), headOffset);
+
+    float ear1Offset[3] = {0.9, -0.2, 1.7};
+    isoSetTranslation(&(heroEar1.isometry), ear1Offset);
+
+    float ear2Offset[3] = {0.9, 0.2, 1.7};
+    isoSetTranslation(&(heroEar2.isometry), ear2Offset);
+
+    float noseOffset[3] = {0.25, 0.2, -0.5};
+    //EDIT: want to rotate the nose 90 degrees
+    isoSetTranslation(&(heroNose.isometry), noseOffset);
 
     // NEW (KB+SL): recursively set the body uniforms
     bodySetUniformsRecursively(&heroBody, isometry, &aligned, 0);

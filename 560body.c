@@ -96,25 +96,32 @@ int bodySetUniformsRecursively(
 
     isoGetHomogeneous(&(body->isometry), bodyHomog);
     mat444Multiply(parent, bodyHomog, proper);
+
+    mat44Transpose(proper, body->uniforms.modelingT);
+    BodyUniforms *bodyUnif = (BodyUniforms *)unifGetAligned(aligned, index);
+    *bodyUnif = body->uniforms;
      
-    float rot[3][3], translation[3];
+    // float rot[3][3], translation[3];
+
     /*
     NEW (KB+SL): need to set the body isometry again
+    * We don't want to reconfigure the body isometry here, this should be done in main
     */
-   //rotation
-    for (int i = 0; i < 3; i++){
-        for (int j = 0; j < 3; j++){
-            rot[i][j] = proper[i][j];
-        }
-    }
-    //translation
-    for (int i = 0; i < 3; i++){
-        translation[i] = proper[i][3];
-    }
-    isoSetRotation(&(body->isometry), rot);
-    isoSetTranslation(&(body->isometry), translation);
 
-    bodySetUniforms(body, aligned, index);
+//    //rotation
+//     for (int i = 0; i < 3; i++){
+//         for (int j = 0; j < 3; j++){
+//             rot[i][j] = proper[i][j];
+//         }
+//     }
+//     //translation
+//     for (int i = 0; i < 3; i++){
+//         translation[i] = proper[i][3];
+//     }
+//     isoSetRotation(&(body->isometry), rot);
+//     isoSetTranslation(&(body->isometry), translation);
+
+//     bodySetUniforms(body, aligned, index);
 
     if (body->firstChild != NULL){
         index = bodySetUniformsRecursively(body->firstChild, proper, aligned, index + 1);
