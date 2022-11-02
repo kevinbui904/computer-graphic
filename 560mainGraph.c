@@ -197,7 +197,7 @@ int initializeVeshes() {
 
     meshFinalize(&mesh);
     /* Make the heroHead vesh */
-    if(mesh3DInitializeSphere(&mesh, 4.0, 16, 32) != 0){
+    if(mesh3DInitializeSphere(&mesh, 1.0, 16, 32) != 0){
         veshFinalize(&landVesh);
         veshFinalize(&heroVesh);
         veshFinalize(&waterVesh);
@@ -488,8 +488,10 @@ void setBodyUniforms(uint32_t imageIndex) {
     heroBody.isometry = isom;
 
     /*
-
+    NEW (KB+SL): set the head to be slightly offsetted from body
     */
+    float headOffset[3] = {1.0, 0.0, 1.0};
+    isoSetTranslation(&(heroHead.isometry), headOffset);
 
     // NEW (KB+SL): recursively set the body uniforms
     bodySetUniformsRecursively(&heroBody, isometry, &aligned, 0);
