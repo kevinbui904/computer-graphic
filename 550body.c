@@ -63,17 +63,15 @@ int bodyRenderRecursively(
         int index) {
     /* NEW (KB+SL). We want inorder traversal, so children get rendered before siblings */
 
-    int currentIndex = index + 1;
+    bodyRender(body, cmdBuf, pipelineLayout, descriptorSet, aligned, index);
     
     if (body->firstChild != NULL){
-        currentIndex = bodyRenderRecursively(body->firstChild, cmdBuf, pipelineLayout, descriptorSet, aligned, currentIndex);
+        index = bodyRenderRecursively(body->firstChild, cmdBuf, pipelineLayout, descriptorSet, aligned, index + 1);
 
     }
     if (body->nextSibling != NULL){
-        currentIndex = bodyRenderRecursively(body->nextSibling, cmdBuf, pipelineLayout, descriptorSet, aligned, currentIndex);
+        index = bodyRenderRecursively(body->nextSibling, cmdBuf, pipelineLayout, descriptorSet, aligned, index + 1);
     }
-
-    bodyRender(body, cmdBuf, pipelineLayout, descriptorSet, aligned, index);
 
     return index;
 }
@@ -96,18 +94,32 @@ int bodySetUniformsRecursively(
 
     isoGetHomogeneous(&(body->isometry), bodyHomog);
     mat444Multiply(parent, bodyHomog, proper);
-
-    int currentIndex = index + 1;
-
-    if (body->firstChild != NULL){
-        currentIndex = bodySetUniformsRecursively(body->firstChild, proper, aligned, currentIndex);
-
+     
+    float rot[3][3], translation[3];
+    /*
+    NEW (KB+SL): need to set the body isometry again
+    */
+   //rotation
+    for (int i = 0; i < 3; i++){
+        for (int j = 0; j < 3; j++){
+            rot[i][j] = proper[i][j];
+        }
     }
-    if (body->nextSibling != NULL){
-        currentIndex = bodySetUniformsRecursively(body->nextSibling, parent, aligned, currentIndex);
+    //translation
+    for (int i = 0; i < 3; i++){
+        translation[i] = proper[i][3];
     }
+    isoSetRotation(&(body->isometry), rot);
+    isoSetTranslation(&(body->isometry), translation);
 
     bodySetUniforms(body, aligned, index);
+
+    if (body->firstChild != NULL){
+        index = bodySetUniformsRecursively(body->firstChild, proper, aligned, index + 1);
+    }
+    if (body->nextSibling != NULL){
+        index = bodySetUniformsRecursively(body->nextSibling, parent, aligned, index + 1);
+    }
 
     return index;
 }

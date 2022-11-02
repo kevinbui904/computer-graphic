@@ -310,7 +310,7 @@ void setCamera() {
 int bodyNum = 3;
 
 /*
-    NEW (KB+SL): globals for body
+    NEW (KB+SL): globals for bfody
     I would've called them bean, land, and water...but w.e. Josh coded it
 */
 bodyBody landBody;
@@ -328,13 +328,13 @@ int initializeScene() {
 
     Make the three bodies siblings of each other
     */
-    bodyConfigure(&landBody, &landVesh, NULL, &waterBody);
+    bodyConfigure(&landBody, &landVesh, NULL, NULL);
     landBody.uniforms.texIndices[0] = 0;
 
-    bodyConfigure(&waterBody, &waterVesh, NULL, NULL);
+    bodyConfigure(&waterBody, &waterVesh, NULL, &landBody);
     waterBody.uniforms.texIndices[0] = 1;
 
-    bodyConfigure(&heroBody, &heroVesh, NULL, &landBody);
+    bodyConfigure(&heroBody, &heroVesh, NULL, &waterBody);
     heroBody.uniforms.texIndices[0] = 2;
 
     return 0;
@@ -456,6 +456,7 @@ void setBodyUniforms(uint32_t imageIndex) {
     heroBody.isometry = isom;
 
     // NEW (KB+SL): recursively set the body uniforms
+   
     bodySetUniformsRecursively(&heroBody, isometry, &aligned, 0);
 
     /* Copy the body UBO bits from the CPU to the GPU. */
@@ -816,7 +817,7 @@ int initializeCommandBuffers() {
         /*
         NEW (KB+SL): rendering the three bodies recursively
         */
-        bodyRenderRecursively(&landBody, &(connCommandBuffers[i]), &connPipelineLayout, &(desc.descriptorSets[i]), &aligned, 0);
+        bodyRenderRecursively(&heroBody, &(connCommandBuffers[i]), &connPipelineLayout, &(desc.descriptorSets[i]), &aligned, 0);
         
         /* End render pass and command buffer. */
         vkCmdEndRenderPass(connCommandBuffers[i]);
