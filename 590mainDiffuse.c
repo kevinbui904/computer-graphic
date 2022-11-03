@@ -17,17 +17,6 @@ You might also need to compile the shaders with
 Then run the program with 
     ./a.out
 
-On Linux, make sure that NUMDEVICEEXT below is 1, and then compile with 
-    clang 540mainBody.c -lglfw -lvulkan -lm
-You might also need to compile the shaders with 
-    /mnt/c/VulkanSDK/1.3.216.0/Bin/glslc.exe 530shader.vert -o 530vert.spv
-    /mnt/c/VulkanSDK/1.3.216.0/Bin/glslc.exe 530shader.frag -o 530frag.spv
-(You might have to change the SDK version number to match your installation.) 
-Then run the program with 
-    ./a.out
-If you see errors, then try changing ANISOTROPY to 0 and/or MAXFRAMESINFLIGHT to 
-1.
-
 */
 
 #include <stdio.h>
@@ -548,7 +537,7 @@ void setSceneUniforms(uint32_t imageIndex) {
     NEW (KB+SL): configuring ambient light color
     */
 
-    float ambientLightColor[3] = {0.2, 0.0, 0.0};
+    float ambientLightColor[3] = {0.1, 0.1, 0.1};
     vecCopy(3, ambientLightColor, sceneUnifs.cLightAmbient);
 
     /* Copy the bits. */

@@ -41,6 +41,6 @@ void main() {
     outColor = outColor + ((iDiffusePositional) * (scene.cLightPositional * rgbaTex));
 
     // ambient light added 
-    outColor = outColor + dot(scene.cLightAmbient, rgbaTex);
+    outColor = outColor + (scene.cLightAmbient * rgbaTex);
 }
 
