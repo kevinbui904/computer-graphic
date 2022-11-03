@@ -21,12 +21,19 @@ layout(location = 2) in vec3 attrNOP;
 
 layout(location = 0) out vec2 st;
 layout(location = 1) out vec3 dNormal;
-layout(location = 2) out vec3 uPositionalLight;
+layout(location = 2) out vec3 uLightPositional;
 
 void main() {
+    // compute the normal vector from vertex
     vec4 homogWorldNormal = body.modeling * vec4(attrNOP, 0.0);
     dNormal = vec3(homogWorldNormal);
-    gl_Position = scene.camera * (body.modeling * vec4(attrXYZ, 1.0));
+
     st = attrST;
+    vec3 xyzWorld = vec3(body.modeling * vec4(attrXYZ, 1.0));
+    uLightPositional = normalize(vec3(scene.pLightPositional) - xyzWorld);
+
+// sets the position of our fragment
+    gl_Position = scene.camera * (body.modeling * vec4(attrXYZ, 1.0));
+
 }
 

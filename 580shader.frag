@@ -17,13 +17,25 @@ layout(binding = 2) uniform sampler2D samplers[3];
 
 layout(location = 0) in vec2 st;
 layout(location = 1) in vec3 dNormal;
+layout(location = 2) in vec3 uLightPositional;
 
 layout(location = 0) out vec4 outColor;
 
 void main() {
+    // uLightPositional got interpolated inside fragment shader, might not be
+    // a unit vector here, we just normalize it again.
+    
+    vec3 uLightPositional = normalize(uLightPositional);
+
     vec4 rgbaTex = texture(samplers[body.texIndices[0]], st);
     vec3 uNormal = normalize(dNormal);
-    float iDiffuse = max(0.0, dot(uNormal, vec3(scene.uLight)));
-    outColor = iDiffuse * (scene.cLight * rgbaTex);
+
+    float iDiffuseDirectional = max(0.0, dot(uNormal, vec3(scene.uLightDirectional)));
+
+    // iDiffuse for positional light 
+    float iDiffusePositional = max(0.0, dot(uNormal, uLightPositional));
+
+    outColor = (iDiffuseDirectional) * (scene.cLightDirectional * rgbaTex);
+    outColor = outColor + ((iDiffusePositional) * (scene.cLightPositional * rgbaTex));
 }
 
