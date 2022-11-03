@@ -24,8 +24,8 @@ layout(location = 1) out vec3 dNormal;
 layout(location = 2) out vec3 uPositionalLight;
 
 void main() {
-    vec4 homogUnifNormal = body.modeling * vec4(attrNOP, 0.0);
-    dNormal = vec3(homogUnifNormal);
+    vec4 homogWorldNormal = body.modeling * vec4(attrNOP, 0.0);
+    dNormal = vec3(homogWorldNormal);
     gl_Position = scene.camera * (body.modeling * vec4(attrXYZ, 1.0));
     st = attrST;
 }
