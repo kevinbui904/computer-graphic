@@ -3,8 +3,11 @@
 
 layout(binding = 0) uniform SceneUniforms {
     mat4 camera;
-    vec4 uLight;
-    vec4 cLight;
+    vec4 uLightDirectional;
+    vec4 cLightDirectional;
+
+    vec4 pLightPositional;
+    vec4 cLightPositional;
 } scene;
 layout(binding = 1) uniform BodyUniforms {
     mat4 modeling;
