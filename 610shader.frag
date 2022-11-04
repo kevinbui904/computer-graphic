@@ -12,6 +12,8 @@ layout(binding = 0) uniform SceneUniforms {
     vec4 cLightAmbient;
 
     vec4 pCamera;
+
+    float kConst;
 } scene;
 layout(binding = 1) uniform BodyUniforms {
     mat4 modeling;
@@ -24,6 +26,7 @@ layout(location = 0) in vec2 st;
 layout(location = 1) in vec3 dNormal;
 layout(location = 2) in vec3 uLightPositional;
 layout(location = 3) in vec3 uToCamera;
+layout(location = 4) in float distance;
 
 layout(location = 0) out vec4 outColor;
 
@@ -65,10 +68,13 @@ void main() {
 
     vec4 specLightPositional = pow(iSpecPositional, 64.0f) * (scene.cLightPositional * body.cSpecular);
 
+    //compute squared distance from positional light to fragment
+    float attenuation = 1 / (1 + (scene.kConst * pow(distance, 2.0f)));
+
     //computing outColors
 
     outColor =  iDiffuseDirectional * scene.cLightDirectional * rgbaTex;
-    outColor = outColor + (iDiffusePositional * scene.cLightPositional * rgbaTex);
+    outColor = outColor + (iDiffusePositional * scene.cLightPositional * attenuation * rgbaTex);
 
     // ambient light added 
     outColor = outColor + dot(scene.cLightAmbient, rgbaTex);

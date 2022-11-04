@@ -268,6 +268,10 @@ void finalizeVeshes() {
     veshFinalize(&waterVesh);
     veshFinalize(&landVesh);
     veshFinalize(&heroVesh);
+    veshFinalize(&heroHeadVesh);
+    veshFinalize(&heroEar1Vesh);
+    veshFinalize(&heroEar2Vesh);
+    veshFinalize(&heroNoseVesh);
 }
 
 /* Textures. */

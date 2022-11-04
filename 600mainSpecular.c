@@ -103,7 +103,7 @@ typedef struct BodyUniforms BodyUniforms;
 struct BodyUniforms {
     float modelingT[4][4];
     uint32_t texIndices[4];
-    float cSpec[4];
+    float cSpecular[4];
 };
 
 #include "560body.c"
@@ -258,6 +258,10 @@ void finalizeVeshes() {
     veshFinalize(&waterVesh);
     veshFinalize(&landVesh);
     veshFinalize(&heroVesh);
+    veshFinalize(&heroHeadVesh);
+    veshFinalize(&heroEar1Vesh);
+    veshFinalize(&heroEar2Vesh);
+    veshFinalize(&heroNoseVesh);
 }
 
 /* Textures. */
@@ -396,21 +400,35 @@ int initializeScene() {
     */
     bodyConfigure(&landBody, &landVesh, NULL, NULL);
     landBody.uniforms.texIndices[0] = 0;
+    float landSpecular[3] = {0.0, 0.0, 0.0};
+    vecCopy(3, landSpecular, landBody.uniforms.cSpecular);
 
     bodyConfigure(&waterBody, &waterVesh, NULL, NULL);
     waterBody.uniforms.texIndices[0] = 1;
+    float waterSpecular[3] = {1.0, 1.0, 1.0};
+    vecCopy(3, waterSpecular, waterBody.uniforms.cSpecular);
 
     //configuring the heroBody
     bodyConfigure(&heroBody, &heroVesh, NULL, NULL);
     heroBody.uniforms.texIndices[0] = 2;
+    float heroSpecular[3] = {1.0, 1.0, 1.0};
+    vecCopy(3, heroSpecular, heroBody.uniforms.cSpecular);
+
     bodyConfigure(&heroHead, &heroHeadVesh, NULL, NULL);
     heroHead.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroHead.uniforms.cSpecular);
+
     bodyConfigure(&heroEar1, &heroEar1Vesh, NULL, NULL);
     heroEar1.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroEar1.uniforms.cSpecular);
+
     bodyConfigure(&heroEar2, &heroEar2Vesh, NULL, NULL);
     heroEar2.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroEar2.uniforms.cSpecular);
+
     bodyConfigure(&heroNose, &heroNoseVesh, NULL, NULL);
     heroNose.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroNose.uniforms.cSpecular);
     
     /*
     NEW(KB+SL): Configure the scene graph
@@ -491,6 +509,7 @@ struct SceneUniforms {
     float pLightPositional[4];
     float cLightPositional[4];
     float cLightAmbient[4];
+    float pCamera[4];
 };
 
 VkBuffer *sceneUniformBuffers;
@@ -504,7 +523,12 @@ void setSceneUniforms(uint32_t imageIndex) {
     float cam[4][4];
     camGetProjectionInverseIsometry(&camera, cam);
     mat44Transpose(cam, sceneUnifs.cameraT);
-    
+
+    /*
+    NEW (KB+SL): initilalizing pCamera to match the world position of the camera
+    */
+    vecCopy(3, camera.isometry.translation, sceneUnifs.pCamera);
+
     /*
     NEW (KB+SL): configuring light source for scene
     Note that sunDirection needs to be a unit vector

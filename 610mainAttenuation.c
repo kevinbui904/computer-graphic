@@ -10,10 +10,10 @@
 Code that is new, compared to the final Vulkan tutorial, is marked 'New'.
 
 On macOS, make sure that NUMDEVICEEXT below is 2, and then compile with 
-    clang 590mainDiffuse.c -lglfw -lvulkan
+    clang 610mainAttenuation.c -lglfw -lvulkan
 You might also need to compile the shaders with 
-    glslc 590shader.vert -o 590vert.spv
-    glslc 590shader.frag -o 590frag.spv
+    glslc 610shader.vert -o 610vert.spv
+    glslc 610shader.frag -o 610frag.spv
 Then run the program with 
     ./a.out
 
@@ -103,6 +103,7 @@ typedef struct BodyUniforms BodyUniforms;
 struct BodyUniforms {
     float modelingT[4][4];
     uint32_t texIndices[4];
+    float cSpecular[4];
 };
 
 #include "560body.c"
@@ -399,21 +400,35 @@ int initializeScene() {
     */
     bodyConfigure(&landBody, &landVesh, NULL, NULL);
     landBody.uniforms.texIndices[0] = 0;
+    float landSpecular[3] = {1.0, 1.0, 1.0};
+    vecCopy(3, landSpecular, landBody.uniforms.cSpecular);
 
     bodyConfigure(&waterBody, &waterVesh, NULL, NULL);
     waterBody.uniforms.texIndices[0] = 1;
+    float waterSpecular[3] = {1.0, 1.0, 1.0};
+    vecCopy(3, waterSpecular, waterBody.uniforms.cSpecular);
 
     //configuring the heroBody
     bodyConfigure(&heroBody, &heroVesh, NULL, NULL);
     heroBody.uniforms.texIndices[0] = 2;
+    float heroSpecular[3] = {1.0, 1.0, 1.0};
+    vecCopy(3, heroSpecular, heroBody.uniforms.cSpecular);
+
     bodyConfigure(&heroHead, &heroHeadVesh, NULL, NULL);
     heroHead.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroHead.uniforms.cSpecular);
+
     bodyConfigure(&heroEar1, &heroEar1Vesh, NULL, NULL);
     heroEar1.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroEar1.uniforms.cSpecular);
+
     bodyConfigure(&heroEar2, &heroEar2Vesh, NULL, NULL);
     heroEar2.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroEar2.uniforms.cSpecular);
+
     bodyConfigure(&heroNose, &heroNoseVesh, NULL, NULL);
     heroNose.uniforms.texIndices[0] = 2;
+    vecCopy(3, heroSpecular, heroNose.uniforms.cSpecular);
     
     /*
     NEW(KB+SL): Configure the scene graph
@@ -439,7 +454,7 @@ shaProgram shaProg;
 finalizeArtwork later. */
 int initializeArtwork() {
     /* New: New shaders and new helper functions. */
-    if (shaInitialize(&shaProg, "590vert.spv", "590frag.spv") != 0) {
+    if (shaInitialize(&shaProg, "610vert.spv", "610frag.spv") != 0) {
         return 5;
     }
     int attrDims[3] = {3, 2, 3};
@@ -483,6 +498,7 @@ void finalizeArtwork() {
     NEW (KB+SL): configuring brightness for our scene, updated in keyboard handler
 */
 float brightness = 1.0;
+float kConst = 500;
 /*** UNIFORM PART OF CONNECTION BETWEEN SWAP CHAIN AND SCENE ******************/
 
 /* New: I've removed the color, because it was a mostly useless example. */
@@ -494,6 +510,8 @@ struct SceneUniforms {
     float pLightPositional[4];
     float cLightPositional[4];
     float cLightAmbient[4];
+    float pCamera[4];
+    float kConst;
 };
 
 VkBuffer *sceneUniformBuffers;
@@ -507,7 +525,12 @@ void setSceneUniforms(uint32_t imageIndex) {
     float cam[4][4];
     camGetProjectionInverseIsometry(&camera, cam);
     mat44Transpose(cam, sceneUnifs.cameraT);
-    
+
+    /*
+    NEW (KB+SL): initilalizing pCamera to match the world position of the camera
+    */
+    vecCopy(3, camera.isometry.translation, sceneUnifs.pCamera);
+
     /*
     NEW (KB+SL): configuring light source for scene
     Note that sunDirection needs to be a unit vector
@@ -519,22 +542,23 @@ void setSceneUniforms(uint32_t imageIndex) {
     vecCopy(3, directionalLightUnit, sceneUnifs.uLightDirectional);
     vecCopy(3, directionalLightColor, sceneUnifs.cLightDirectional);
 
+    sceneUnifs.kConst = kConst;
+
     /*
     NEW (KB+SL): configuring the positional light source
-    per Josh's specification (if there's more land, then 
-    put the z coordinate where the lands are)
+    so that it tracks the hero as it moves around
     */
-    float zPositionalLightPosition;
-    if(landData[0] + 1 > waterData[0] + 1){
-        zPositionalLightPosition = landData[0] + 1;
-    }
-    else{
-        zPositionalLightPosition = waterData[0] + 1;
-    }
-    float positionalLightPosition[3] = {0.0, 0.0, zPositionalLightPosition};
-    float positionalLightColor[3] = {1.0, 0.0, 0.0};
+    // float zPositionalLightPosition;
+    // if(landData[0] + 1 > waterData[0] + 1){
+    //     zPositionalLightPosition = landData[0] + 1;
+    // }
+    // else{
+    //     zPositionalLightPosition = waterData[0] + 1;
+    // }
+    float positionalLightPosition[3] = {0.0, 0.0, heroPos[2]};
+    float positionalLightColor[3] = {1.0, 1.0, 1.0};
 
-    vecCopy(3, positionalLightPosition, sceneUnifs.pLightPositional);
+    vecCopy(3, heroPos, sceneUnifs.pLightPositional);
     vecCopy(3, positionalLightColor, sceneUnifs.cLightPositional);
 
     /*
@@ -563,11 +587,7 @@ void setBodyUniforms(uint32_t imageIndex) {
     /*
     NEW (KB+SL): update the body uniforms, these  includes the modeling
     matrices so they change from frame to frame
-
-    bodyUnifs is a struct member of bodyBody type, we'll rewrite
-    these as we go
     */
-    BodyUniforms bodyUnifs;
     
     float isometry[4][4] = {
         {1.0, 0.0, 0.0, 0.0},                           // row 0, not column 0
@@ -585,6 +605,7 @@ void setBodyUniforms(uint32_t imageIndex) {
     isoSetTranslation(&isom, heroPos);
     isoGetHomogeneous(&isom, homog);
     heroBody.isometry = isom;
+
 
     /*
     NEW (KB+SL): set the head to be slightly offsetted from body
@@ -1152,6 +1173,10 @@ void handleKey(
         brightness += 0.05;
     else if (key == GLFW_KEY_E && brightness >= 0.0)
         brightness -= 0.05;
+    else if (key == GLFW_KEY_X && key == GLFW_KEY_LEFT_SHIFT)
+        kConst += 100;
+    else if (key == GLFW_KEY_X && kConst > 100)
+        kConst -= 100;
     
     /* Update which hero keys are down. They affect the hero automatically on 
     each time step. */
