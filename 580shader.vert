@@ -32,7 +32,7 @@ void main() {
     vec3 xyzWorld = vec3(body.modeling * vec4(attrXYZ, 1.0));
     uLightPositional = normalize(vec3(scene.pLightPositional) - xyzWorld);
 
-// sets the position of our fragment
+    // sets the position of our fragment
     gl_Position = scene.camera * (body.modeling * vec4(attrXYZ, 1.0));
 
 }

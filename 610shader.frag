@@ -68,6 +68,7 @@ void main() {
 
     vec4 specLightPositional = pow(iSpecPositional, 64.0f) * (scene.cLightPositional * body.cSpecular);
 
+    //compute distance between pFrag(xyzWorld) and pLight
     float distance = length(vec3(scene.pLightPositional) - xyzWorld);
 
     //compute squared distance from positional light to fragment
@@ -76,12 +77,15 @@ void main() {
     //computing outColors
 
     outColor =  iDiffuseDirectional * scene.cLightDirectional * rgbaTex;
+    
+    //attenuation is added in positional lighting
     outColor = outColor + (iDiffusePositional * scene.cLightPositional * attenuation * rgbaTex);
 
     // ambient light added 
     outColor = outColor + (scene.cLightAmbient * rgbaTex);
 
-    //specular light added 
+    //specular light added
+    //attenuation is added in specular lighting (hero will light up or dim when attenuation changes)
     outColor += specLightDirectional + (specLightPositional * attenuation);
 }
 

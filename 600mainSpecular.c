@@ -1166,6 +1166,8 @@ void handleKey(
         cameraRho *= 0.95;
     else if (key == GLFW_KEY_U)
         cameraRho *= 1.05;
+    // NEW (KB + SL): brightness of directional light is increased by pressing Q
+    // and decreased by pressing E
     else if (key == GLFW_KEY_Q && brightness <= 1.0)
         brightness += 0.05;
     else if (key == GLFW_KEY_E && brightness >= 0.0)

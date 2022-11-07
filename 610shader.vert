@@ -36,14 +36,16 @@ void main() {
     dNormal = vec3(homogWorldNormal);
 
     st = attrST;
+
+    // passes xyzWorld as a varying to calculate distance in fragment shader
     xyzWorld = vec3(body.modeling * vec4(attrXYZ, 1.0));
     uLightPositional = normalize(vec3(scene.pLightPositional) - xyzWorld);
 
-// unit vector pointing to camera
+    // unit vector pointing to camera
     uToCamera = normalize(vec3(scene.pCamera) - xyzWorld);
 
 
-// sets the position of our fragment
+    // sets the position of our fragment
     gl_Position = scene.camera * (body.modeling * vec4(attrXYZ, 1.0));
 
 }

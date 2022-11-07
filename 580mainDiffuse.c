@@ -601,13 +601,13 @@ void setBodyUniforms(uint32_t imageIndex) {
     float ear2Offset[3] = {0.9, 0.2, 1.7};
     isoSetTranslation(&(heroEar2.isometry), ear2Offset);
 
+    //NEW (KB+SL): rotate the nose 90 degrees
     float noseOffset[3] = {0.25, 0.2, -0.5};
     float noseRotation[3][3] = {
         {1.0, 0.0, 0.0},
         {0.0, 0.0, -1.0},
         {0.0, 1.0, 0.0}
     };
-    //EDIT: want to rotate the nose 90 degrees
     isoSetTranslation(&(heroNose.isometry), noseOffset);
     isoSetRotation(&(heroNose.isometry), noseRotation);
 

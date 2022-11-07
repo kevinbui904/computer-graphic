@@ -547,14 +547,7 @@ void setSceneUniforms(uint32_t imageIndex) {
     NEW (KB+SL): configuring the positional light source
     so that it tracks the hero as it moves around
     */
-    // float zPositionalLightPosition;
-    // if(landData[0] + 1 > waterData[0] + 1){
-    //     zPositionalLightPosition = landData[0] + 1;
-    // }
-    // else{
-    //     zPositionalLightPosition = waterData[0] + 1;
-    // }
-    float positionalLightPosition[3] = {0.0, 0.0, heroPos[2]};
+    
     float positionalLightColor[3] = {1.0, 1.0, 1.0};
 
     vecCopy(3, heroPos, sceneUnifs.pLightPositional);
@@ -1173,11 +1166,16 @@ void handleKey(
     else if (key == GLFW_KEY_E && brightness >= 0.0)
         brightness -= 0.05;
     else if (key == GLFW_KEY_X)
-        kConst *= 2;
-    else if (key == GLFW_KEY_Z)
-        kConst *= 0.5;
+    {
+        // NEW (KB + SL): attenuation key binding.
+        // If x is pressed, kConst increases
+        // If x + shift is pressed, kConst decreases
+        if (shiftIsDown)
+            kConst *= 0.5;
+        else
+            kConst *= 2;
+    }
     
- 
     /* Update which hero keys are down. They affect the hero automatically on 
     each time step. */
     if (key == GLFW_KEY_W) {
