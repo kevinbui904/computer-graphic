@@ -53,11 +53,11 @@ void main() {
     float iSpecDirectional = max(0, dot(uLightReflectedDirectional, uToCamera));
     float iSpecPositional = max(0, dot(uLightReflectedPositional, uToCamera));
 
-    if(iDiffuseDirectional < 0){
+    if(iDiffuseDirectional <= 0){
         iSpecDirectional = 0;
     }
 
-    if(iDiffusePositional < 0){
+    if(iDiffusePositional <= 0){
         iSpecPositional = 0;
     }
 
@@ -71,7 +71,7 @@ void main() {
     outColor = outColor + (iDiffusePositional * scene.cLightPositional * rgbaTex);
 
     // ambient light added 
-    outColor = outColor + dot(scene.cLightAmbient, rgbaTex);
+    outColor = outColor + (scene.cLightAmbient * rgbaTex);
 
     //specular light added 
     outColor += specLightDirectional + specLightPositional;

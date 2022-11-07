@@ -28,7 +28,7 @@ layout(location = 0) out vec2 st;
 layout(location = 1) out vec3 dNormal;
 layout(location = 2) out vec3 uLightPositional;
 layout(location = 3) out vec3 uToCamera;
-layout(location = 4) out float distance;
+layout(location = 4) out vec3 xyzWorld;
 
 void main() {
     // compute the normal vector from vertex
@@ -36,12 +36,11 @@ void main() {
     dNormal = vec3(homogWorldNormal);
 
     st = attrST;
-    vec3 xyzWorld = vec3(body.modeling * vec4(attrXYZ, 1.0));
+    xyzWorld = vec3(body.modeling * vec4(attrXYZ, 1.0));
     uLightPositional = normalize(vec3(scene.pLightPositional) - xyzWorld);
 
 // unit vector pointing to camera
     uToCamera = normalize(vec3(scene.pCamera) - xyzWorld);
-    distance = length(vec3(scene.pLightPositional) - xyzWorld);
 
 
 // sets the position of our fragment

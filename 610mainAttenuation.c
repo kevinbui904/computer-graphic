@@ -498,7 +498,7 @@ void finalizeArtwork() {
     NEW (KB+SL): configuring brightness for our scene, updated in keyboard handler
 */
 float brightness = 1.0;
-float kConst = 500;
+float kConst = 0.5;
 /*** UNIFORM PART OF CONNECTION BETWEEN SWAP CHAIN AND SCENE ******************/
 
 /* New: I've removed the color, because it was a mostly useless example. */
@@ -511,7 +511,7 @@ struct SceneUniforms {
     float cLightPositional[4];
     float cLightAmbient[4];
     float pCamera[4];
-    float kConst;
+    float kConst[4];
 };
 
 VkBuffer *sceneUniformBuffers;
@@ -541,8 +541,7 @@ void setSceneUniforms(uint32_t imageIndex) {
 
     vecCopy(3, directionalLightUnit, sceneUnifs.uLightDirectional);
     vecCopy(3, directionalLightColor, sceneUnifs.cLightDirectional);
-
-    sceneUnifs.kConst = kConst;
+    sceneUnifs.kConst[0] = kConst;
 
     /*
     NEW (KB+SL): configuring the positional light source
@@ -1173,11 +1172,12 @@ void handleKey(
         brightness += 0.05;
     else if (key == GLFW_KEY_E && brightness >= 0.0)
         brightness -= 0.05;
-    else if (key == GLFW_KEY_X && key == GLFW_KEY_LEFT_SHIFT)
-        kConst += 100;
-    else if (key == GLFW_KEY_X && kConst > 100)
-        kConst -= 100;
+    else if (key == GLFW_KEY_X)
+        kConst *= 2;
+    else if (key == GLFW_KEY_Z)
+        kConst *= 0.5;
     
+ 
     /* Update which hero keys are down. They affect the hero automatically on 
     each time step. */
     if (key == GLFW_KEY_W) {
