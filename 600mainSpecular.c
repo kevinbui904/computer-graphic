@@ -553,7 +553,7 @@ void setSceneUniforms(uint32_t imageIndex) {
         zPositionalLightPosition = waterData[0] + 1;
     }
     float positionalLightPosition[3] = {0.0, 0.0, zPositionalLightPosition};
-    float positionalLightColor[3] = {1.0, 0.0, 0.0};
+    float positionalLightColor[3] = {1.0, 1.0, 0.0};
 
     vecCopy(3, positionalLightPosition, sceneUnifs.pLightPositional);
     vecCopy(3, positionalLightColor, sceneUnifs.cLightPositional);
