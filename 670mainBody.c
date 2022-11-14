@@ -118,6 +118,9 @@ int initializeArtwork(void) {
 
 void finalizeArtwork(void) {
     texFinalize(&texture);
+    for(int i = 0; i < BODYNUM; i++){
+        bodyFinalize(&(bodies[i]));
+    }
     return;
 }
 
