@@ -7,9 +7,9 @@
 
 
 /* On macOS, compile with...
-    clang 670mainBody.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 680mainLight.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 670mainBody.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 680mainLight.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 #include <stdio.h>
 #include <math.h>
@@ -29,6 +29,8 @@ On Ubuntu, compile with...
 #include "670body.c"
 #include "670sphere.c"
 
+/* NEW (KB+SL): for light effects*/
+#include "680light.c"
 
 #define SCREENWIDTH 512
 #define SCREENHEIGHT 512
@@ -131,10 +133,7 @@ void finalizeArtwork(void) {
 
 /* Given a ray x(t) = p + t d. Finds the color where that ray hits the scene (or 
 the background) and loads the color into the rgb parameter. */
-void getSceneColor(
-        int bodyNum, const bodyBody bodies[], const double p[3], 
-        const double d[3], double rgb[3])
- {
+void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
     rayIntersection ray;
     int intersectedBody;
     int count = 0;
@@ -142,7 +141,7 @@ void getSceneColor(
 
     /*NEW (KB+SL): this is to keep track of the final ray intersection, to be used for texturing*/
     rayIntersection rayFinal;
-    for(int i = 0; i < bodyNum; i++){
+    for(int i = 0; i < BODYNUM; i++){
         bodyGetIntersection(&(bodies[i]), p, d, bound, &ray); 
         if(ray.t < bound && ray.t != rayNONE){
             intersectedBody = i;
@@ -216,7 +215,7 @@ void render(void) {
 
             /* Set the pixel to the color of that ray. */
             double rgb[3];
-            getSceneColor(BODYNUM, bodies, p, d, rgb);
+            getSceneColor(p, d, rgb);
             pixSetRGB(i, j, rgb[0], rgb[1], rgb[2]);
         }
     }
