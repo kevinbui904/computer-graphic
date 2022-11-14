@@ -117,7 +117,7 @@ void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
     rayIntersection ray;
     int intersectedBody;
     int count = 0;
-    float bound = rayINFINITY;
+    double bound = rayINFINITY;
     for(int i = 0; i < BODYNUM; i++){
         getIntersection(radii[i], &isoms[i], p, d, bound, &ray);    
         if(ray.t < bound && ray.t != rayNONE){
