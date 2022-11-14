@@ -47,12 +47,6 @@ void getIntersection(
     rSq = r * r;
     disc = dPMinusC * dPMinusC - dD * (vecDot(3, pMinusC, pMinusC) - rSq);
 
-    // printf("disc: %f, %f, %f\n", d[0], d[1], d[2]);
-
-    //  if(disc > 0){
-    //     printf("disc: %f \n", disc);
-    //  }
-
     if (disc <= 0) {
         inter->t = rayNONE;
         return;
@@ -60,8 +54,6 @@ void getIntersection(
     disc = sqrt(disc);
     t = (-dPMinusC - disc) / dD;
     if (rayEPSILON <= t && t <= bound) {
-        // printf("hi there: %f\n", t);
-        // exit(1);
         inter->t = t;
         return;
     }
@@ -122,42 +114,22 @@ void finalizeArtwork(void) {
 /* Given a ray x(t) = p + t d. Finds the color where that ray hits the scene (or 
 the background) and loads the color into the rgb parameter. */
 void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
-
-    /* YOUR CODE GOES HERE. (MINE IS 16 LINES.) */
     rayIntersection ray;
     int intersectedBody;
-
     int count = 0;
-    int bound = rayINFINITY;
-
-    // printf("t: %f\n",ray.t);
-    // printf("tFinal: %f\n",rayFinal.t);
+    float bound = rayINFINITY;
     for(int i = 0; i < BODYNUM; i++){
-        getIntersection(radii[i], &isoms[i], p, d, bound, &ray);
-
-        if(ray.t == rayNONE){
-            vec3Set(0.0, 0.0, 0.0, rgb);
-            return;
-        }
-
-        if(ray.t < bound && ray.t > rayNONE){
-            // rayFinal.t = ray.t;
+        getIntersection(radii[i], &isoms[i], p, d, bound, &ray);    
+        if(ray.t < bound && ray.t != rayNONE){
             intersectedBody = i;
             bound = ray.t;
-            // printf("new t: %f, %i\n", rayFinal.t, intersectedBody);
         }
-
-        printf("int i: %i\n", i);
-        vec3Set(colors[intersectedBody][0], colors[intersectedBody][1], colors[intersectedBody][2], rgb);
-
-        // printf("colors: %f, %f, %f \n", rgb[0], rgb[1], rgb[2]);
     }
-
-
-    printf("done with for loop\n");
-    printf("hit here\n");
-    // printf("colors: %f, %f, %f \n", rgb[0], rgb[1], rgb[2]);
-    
+    if(bound == rayINFINITY){
+        vec3Set(0.0, 0.0, 0.0, rgb);
+        return;
+    }
+    vec3Set(colors[intersectedBody][0], colors[intersectedBody][1], colors[intersectedBody][2], rgb);
 }
 
 void render(void) {
@@ -184,7 +156,6 @@ void render(void) {
 
     /* Declare p and maybe compute d. */
     double p[4], d[3];
-    /* YOUR CODE GOES HERE. (MINE IS 4 LINES.) */
     if (camera.projectionType == camORTHOGRAPHIC){
         double v[3] = {0, 0, -1};
         isoRotateDirection(&camera.isometry, v, d);
@@ -206,7 +177,6 @@ void render(void) {
             /* Set the pixel to the color of that ray. */
             double rgb[3];
             getSceneColor(p, d, rgb);
-            // printf("colors: %f, %f, %f\n", rgb[0], rgb[1], rgb[2]);
             pixSetRGB(i, j, rgb[0], rgb[1], rgb[2]);
         }
     }
