@@ -37,7 +37,7 @@ sphere. If there is no such t, then the t member is instead rayNONE. */
 void getIntersection(
         double r, const isoIsometry *isom, const double p[3], const double d[3], 
         double bound, rayIntersection* inter) {
-    /* YOUR CODE GOES HERE. (MINE IS 25 LINES.) */
+
     double c[3];
     vecCopy(3, isom->translation, c);
     double pMinusC[3], dPMinusC, dD, rSq, disc, t;
@@ -124,27 +124,40 @@ the background) and loads the color into the rgb parameter. */
 void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
 
     /* YOUR CODE GOES HERE. (MINE IS 16 LINES.) */
-    rayIntersection ray, rayFinal;
+    rayIntersection ray;
     int intersectedBody;
 
-    rayFinal.t = rayINFINITY;
+    int count = 0;
+    int bound = rayINFINITY;
 
+    // printf("t: %f\n",ray.t);
+    // printf("tFinal: %f\n",rayFinal.t);
     for(int i = 0; i < BODYNUM; i++){
-        getIntersection(radii[i], &isoms[i], p, d, rayINFINITY, &ray);
-        printf("here: %f\n",ray.t);
-        exit(1);
-        if(ray.t < rayFinal.t){
-            rayFinal.t = ray.t;
-            intersectedBody = i;
-            // printf("new t: %f, %i\n", rayFinal.t, intersectedBody);
-        }
+        getIntersection(radii[i], &isoms[i], p, d, bound, &ray);
+
         if(ray.t == rayNONE){
             vec3Set(0.0, 0.0, 0.0, rgb);
             return;
         }
-    vec3Set(colors[intersectedBody][0], colors[intersectedBody][1], colors[intersectedBody][2], rgb);
+
+        if(ray.t < bound && ray.t > rayNONE){
+            // rayFinal.t = ray.t;
+            intersectedBody = i;
+            bound = ray.t;
+            // printf("new t: %f, %i\n", rayFinal.t, intersectedBody);
+        }
+
+        printf("int i: %i\n", i);
+        vec3Set(colors[intersectedBody][0], colors[intersectedBody][1], colors[intersectedBody][2], rgb);
+
+        // printf("colors: %f, %f, %f \n", rgb[0], rgb[1], rgb[2]);
     }
-    return;
+
+
+    printf("done with for loop\n");
+    printf("hit here\n");
+    // printf("colors: %f, %f, %f \n", rgb[0], rgb[1], rgb[2]);
+    
 }
 
 void render(void) {
@@ -193,6 +206,7 @@ void render(void) {
             /* Set the pixel to the color of that ray. */
             double rgb[3];
             getSceneColor(p, d, rgb);
+            // printf("colors: %f, %f, %f\n", rgb[0], rgb[1], rgb[2]);
             pixSetRGB(i, j, rgb[0], rgb[1], rgb[2]);
         }
     }
