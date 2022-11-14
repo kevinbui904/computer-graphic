@@ -7,9 +7,9 @@
 
 
 /* On macOS, compile with...
-    clang 650mainTexturing.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 660mainMaterial.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 650mainTexturing.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 660mainMaterial.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 #include <stdio.h>
 #include <math.h>
@@ -20,7 +20,7 @@ On Ubuntu, compile with...
 #include "280matrix.c"
 #include "300isometry.c"
 #include "300camera.c"
-#include "640ray.c"
+#include "660ray.c"
 
 /*NEW (KB+SL): used to intialize textures*/
 #include "150texture.c"
@@ -69,7 +69,6 @@ void getIntersection(
 
 }
 
-
 /* Given the sphere that just produced the given rayIntersection. Outputs the 
 sphere's texture coordinates at the intersection point. Also outputs the 
 sphere's unit outward-pointing normal vector there, in world coordinates. */
@@ -93,6 +92,22 @@ void getTexCoordsAndNormal(
 }
 
 
+/* Based on the uniforms, textures, rayIntersection, and texture coordinates, 
+outputs a material. */
+void getMaterial(
+        int unifDim, const double unif[], int texNum, const texTexture *tex[], 
+        const rayIntersection *inter, const double texCoords[2], 
+        rayMaterial *material){
+    /*This is very specific to Day 24 work*/
+    material->hasAmbient = 1;
+    material->hasDiffuse = 0;
+    material->hasSpecular = 0;
+    material->hasMirror = 0;
+    material->hasTransmission = 0;
+    texSample(tex[0], texCoords[0], texCoords[1], material->cDiffuse);
+}
+
+
 /*** ARTWORK ******************************************************************/
 
 camCamera camera;
@@ -103,16 +118,20 @@ double cameraRho = 10.0, cameraPhi = M_PI / 3.0, cameraTheta = M_PI / 3.0;
 #define BODYNUM 4
 isoIsometry isoms[BODYNUM];
 double radii[BODYNUM] = {1.0, 0.5, 0.5, 0.5};
-double colors[BODYNUM][3] = {
-    {1.0, 1.0, 1.0}, 
-    {1.0, 0.0, 0.0}, 
-    {0.0, 1.0, 0.0}, 
-    {0.0, 0.0, 1.0}};
+
+/*NEW (KB+SL): Lighting configurations*/
+double cAmbientLight[3] = {0.5, 0.0, 0.0};
+
+/*NEW (KB+SL): unif, textures configurations for materials*/
+#define UNIFDIM 69
+double unif[UNIFDIM];
 
 /*NEW (KB+SL): textures*/
+#define TEXNUM 1
 texTexture texture;
-int initializeArtwork(void) {
+const texTexture *textures[1] = {&texture};
 
+int initializeArtwork(void) {
     /* NEW (KB+SL): initializing a texture*/
     if (texInitializeFile(&texture, "./140imageCat.jpg") != 0)
     {
@@ -144,6 +163,7 @@ void finalizeArtwork(void) {
 
 
 
+
 /*** RENDERING ****************************************************************/
 
 /* Given a ray x(t) = p + t d. Finds the color where that ray hits the scene (or 
@@ -171,14 +191,20 @@ void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
     /* NEW (KB+SL): calculate texture coordinates and normal of a point */
     double texCoords[2], unitNormal[3];
     getTexCoordsAndNormal(radii[intersectedBody], &isoms[intersectedBody], p, d, &rayFinal, texCoords, unitNormal);
-    vec3Set(colors[intersectedBody][0], colors[intersectedBody][1], colors[intersectedBody][2], rgb);
 
-    /*NEW (KB+SL): modulating in textures*/
-    double sample[3];
-    texSample(&texture, texCoords[0], texCoords[1], sample);
-    vecModulate(3, rgb, sample, rgb);
+    /*NEW (KB+SL): get the material specification at this point*/
+    rayMaterial material;
+    getMaterial(UNIFDIM, unif, TEXNUM, textures, &rayFinal, texCoords, &material);
+
+    /*NEW (KB+SL): rendering based on material received*/
+    if(material.hasAmbient){
+        vecModulate(3, cAmbientLight, material.cDiffuse, rgb);
+    }
+
+    // vecModulate(3, rgb, sample, rgb);
     
 }
+
 
 void render(void) {
     /* Build a 4x4 matrix that (along with homogeneous division) takes screen 
