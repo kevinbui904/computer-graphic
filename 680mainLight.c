@@ -71,6 +71,8 @@ bodyBody bodies[BODYNUM];
 
 /*NEW (KB+SL): Lighting configurations*/
 double cAmbientLight[3] = {1.0, 0.0, 0.0};
+#define LIGHTNUM 0
+lightLight lights[LIGHTNUM];
 
 /*NEW (KB+SL): unif, textures configurations for materials*/
 #define UNIFDIM 69
@@ -133,7 +135,10 @@ void finalizeArtwork(void) {
 
 /* Given a ray x(t) = p + t d. Finds the color where that ray hits the scene (or 
 the background) and loads the color into the rgb parameter. */
-void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
+void getSceneColor(
+        int bodyNum, const bodyBody bodies[], const double cAmbient[3], 
+        int lightNum, const lightLight lights[], const double p[3], 
+        const double d[3], double rgb[3]){
     rayIntersection ray;
     int intersectedBody;
     int count = 0;
@@ -162,12 +167,55 @@ void getSceneColor(const double p[3], const double d[3], double rgb[3]) {
     bodyGetMaterial(&(bodies[intersectedBody]), &rayFinal, texCoords, &material);
 
     /*NEW (KB+SL): rendering based on material received*/
-    if(material.hasAmbient){
-        vecModulate(3, cAmbientLight, material.cDiffuse, rgb);
-    }
-
-    // vecModulate(3, rgb, sample, rgb);
+    if(material.hasAmbient)
+        vecModulate(3, cAmbient, material.cDiffuse, rgb);
     
+    if(material.hasDiffuse){
+        double tD[3], xyzWorld[3];
+        vecScale(3, rayFinal.t, d, tD);
+        vecAdd(3, p, tD, xyzWorld);
+        //loop over every light to get the lighting effects
+        double iDiff, modCLightCDiff[3], diffusedLight[3], totalDiffusedLight[3] = {0.0, 0.0, 0.0};
+        lightLighting lighting; 
+        for(int i = 0; i < lightNum; i++){
+            lightGetLighting(&(lights[i]), xyzWorld, &lighting);
+            iDiff = vecDot(3, unitNormal, lighting.uLight);
+            vecModulate(3, lighting.cLight, material.cDiffuse, modCLightCDiff);
+            vecScale(3, iDiff, modCLightCDiff, diffusedLight);
+            vecAdd(3, diffusedLight, totalDiffusedLight, totalDiffusedLight);
+        }
+        vecAdd(3, rgb, totalDiffusedLight, rgb);
+    }
+    if(material.hasSpecular){
+        double tD[3], xyzWorld[3];
+        vecScale(3, rayFinal.t, d, tD);
+        vecAdd(3, p, tD, xyzWorld);
+        //loop over every light to get the lighting effects
+        double  specularLight[3], totalSpecularLight[3] = {0.0, 0.0, 0.0}, 
+        dCamera[3], uCamera[3], uReflected[3], uNormDotULight, specularCoefficient;
+
+        //calculating uCamera
+        vecScale(3, -1.0, d, dCamera);
+        vecUnit(3, dCamera, uCamera);
+        
+        lightLighting lighting; 
+        for(int i = 0; i < lightNum; i++){
+            lightGetLighting(&(lights[i]), xyzWorld, &lighting);
+            //calculate uReflected  
+            uNormDotULight = vecDot(3, unitNormal, lighting.uLight);
+            vecScale(3, uNormDotULight, unitNormal, uReflected);
+            vecScale(3, 2, uReflected, uReflected);
+            vecSubtract(3, uReflected, lighting.uLight, uReflected);
+    
+            specularCoefficient = pow(vecDot(3, uReflected, uCamera), bodies[intersectedBody].materUnif[3]) ;
+            //NOTE: the second parameter is specularColor, it's in the first 3 uniforms of materUNIF
+            vecModulate(3, lighting.cLight, &(bodies[intersectedBody].materUnif[0]), specularLight);
+            vecScale(3, specularCoefficient, specularLight, specularLight);
+
+            vecAdd(3, specularLight, totalSpecularLight, totalSpecularLight);
+        }
+        vecAdd(3, rgb, totalSpecularLight, rgb);
+    }
 }
 
 
@@ -215,7 +263,7 @@ void render(void) {
 
             /* Set the pixel to the color of that ray. */
             double rgb[3];
-            getSceneColor(p, d, rgb);
+            getSceneColor(BODYNUM, bodies, cAmbientLight, LIGHTNUM, lights, p, d, rgb);
             pixSetRGB(i, j, rgb[0], rgb[1], rgb[2]);
         }
     }
