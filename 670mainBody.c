@@ -63,7 +63,7 @@ double cameraRho = 10.0, cameraPhi = M_PI / 3.0, cameraTheta = M_PI / 3.0;
 bodyBody bodies[BODYNUM];
 
 /*bodies configurations*/
-#define MATERUNIFDIM 0
+#define MATERUNIFDIM 4
 #define GEOMUNIFDIM 1
 #define TEXNUM 1
 
@@ -91,6 +91,10 @@ int initializeArtwork(void) {
     //NOTE: the radii is made like this because of how bodySetGeometryUniform is configured
     double radii[BODYNUM][1] = {{1.0}, {0.5}, {0.5}, {0.5}};
     double geomUnif[GEOMUNIFDIM];
+    
+    // NEW (KB+SL): initializing material unifs
+    double matUnif[MATERUNIFDIM] = {0.0, 1.0, 0.0, 64.0};
+
     double translations[BODYNUM][3] = {
         {0.0, 0.0, 0.0},
         {1.0, 0.0, 0.0},
@@ -103,6 +107,9 @@ int initializeArtwork(void) {
         bodyInitialize(&(bodies[i]), GEOMUNIFDIM, MATERUNIFDIM, TEXNUM, sphGetIntersection, sphGetTexCoordsAndNormal, getMaterial);
         bodySetGeometryUniforms(&(bodies[i]), 0, radii[i], 1);
         bodySetTexture(&(bodies[i]), 0, textures[0]);
+
+        // NEW (KB+SL): set material uniforms
+        bodySetMaterialUniforms(&(bodies[i]), 0, matUnif, MATERUNIFDIM);
 
         //set isometries
         isoSetTranslation(&(bodies[i].isometry), translations[i]);

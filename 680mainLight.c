@@ -46,7 +46,8 @@ void getMaterial(
         rayMaterial *material){
     /*This is very specific to Day 24 work*/
     material->hasAmbient = 1;
-    material->hasDiffuse = 0;
+    // NEW (KB + SL): activate diffuse & specular light
+    material->hasDiffuse = 1;
     material->hasSpecular = 0;
     material->hasMirror = 0;
     material->hasTransmission = 0;
@@ -71,8 +72,9 @@ bodyBody bodies[BODYNUM];
 
 /*NEW (KB+SL): Lighting configurations*/
 double cAmbientLight[3] = {1.0, 0.0, 0.0};
-#define LIGHTNUM 0
+#define LIGHTNUM 1
 lightLight lights[LIGHTNUM];
+double lightTheta = 0.0;
 
 /*NEW (KB+SL): unif, textures configurations for materials*/
 #define UNIFDIM 69
@@ -82,6 +84,14 @@ double unif[UNIFDIM];
 #define TEXNUM 1
 texTexture texture;
 texTexture *textures[1] = {&texture};
+
+/* NEW (KB+SL): directive for directional lighting */
+void getDirectionalLighting(int unifDim, const double unif[], const isoIsometry *isometry, const double x[3], lightLighting *lighting){
+    vecCopy(3, unif, lighting->cLight);
+    lighting->distance = rayINFINITY;
+    double directionalVec[3] = {0.0, 0.0, 1.0};
+    isoRotateDirection(isometry, directionalVec, lighting->uLight);
+}
 
 int initializeArtwork(void) {
     /* NEW (KB+SL): initializing a texture*/
@@ -102,6 +112,13 @@ int initializeArtwork(void) {
         {0.0, 0.0, 1.0}
     };
     double rot[3][3] = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}};
+    
+    
+    /* NEW (KB+SL): configuring directional light and putting it into lights array*/
+    double cLightDirectional[3] = {0.0,1.0,0.0};
+    lightInitialize(&(lights[0]), 3, getDirectionalLighting);
+    isoSetRotation(&(lights[0].isometry), rot);
+    lightSetUniforms(&(lights[0]), 0, cLightDirectional, 3);
 
     for(int i = 0; i < BODYNUM; i++){
         bodyInitialize(&(bodies[i]), GEOMUNIFDIM, MATERUNIFDIM, TEXNUM, sphGetIntersection, sphGetTexCoordsAndNormal, getMaterial);
@@ -125,10 +142,11 @@ void finalizeArtwork(void) {
     for(int i = 0; i < BODYNUM; i++){
         bodyFinalize(&(bodies[i]));
     }
+    for(int k = 0; k < LIGHTNUM; k++){
+        lightFinalize(&(lights[k]));
+    }
     return;
 }
-
-
 
 
 /*** RENDERING ****************************************************************/
@@ -222,7 +240,7 @@ void getSceneColor(
 void render(void) {
     /* Build a 4x4 matrix that (along with homogeneous division) takes screen 
     coordinates (x0, x1, 0, 1) to the corresponding world coordinates. */
-    
+
     /* YOUR CODE GOES HERE. (MINE IS 10 LINES.) */
     double camIsom[4][4], projectionInverseIsometry[4][4], cPInv[4][4], invViewport[4][4], cPInvVInv[4][4];
 
@@ -288,6 +306,13 @@ void handleKey(
         cameraRho *= 1.1;
     else if (key == GLFW_KEY_O)
         cameraRho *= 0.9;
+    else if (key == GLFW_KEY_LEFT)
+        lightTheta += 0.1;
+    else if (key == GLFW_KEY_RIGHT)
+    {
+        lightTheta -= 0.1;
+        printf("lightTheta: %f\n", lightTheta);
+    }
     else if (key == GLFW_KEY_P) {
         if (camera.projectionType == camORTHOGRAPHIC)
             camSetProjectionType(&camera, camPERSPECTIVE);
@@ -308,6 +333,14 @@ void handleTimeStep(double oldTime, double newTime) {
     mat33AngleAxisRotation(newTime, rotAxis, rotMatrix);
     for (int k = 0; k < BODYNUM; k += 1)
         isoSetRotation(&(bodies[k].isometry), rotMatrix);
+    
+    /*
+    NEW (KB+SL): to rotate the light (only along the x axis though)
+    */
+    double axisRotation[3] = {1.0, 0.0, 0.0}, lightRotation[3][3];
+    mat33AngleAxisRotation(lightTheta, axisRotation, lightRotation);
+    isoSetRotation(&(lights[0].isometry), lightRotation);
+
     render();
 }
 
