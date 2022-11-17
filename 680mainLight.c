@@ -45,10 +45,10 @@ void getMaterial(
         const rayIntersection *inter, const double texCoords[2], 
         rayMaterial *material){
     /*This is very specific to Day 24 work*/
-    material->hasAmbient = 1;
+    material->hasAmbient = 0;
     // NEW (KB + SL): activate diffuse & specular light
-    material->hasDiffuse = 1;
-    material->hasSpecular = 0;
+    material->hasDiffuse = 0;
+    material->hasSpecular = 1;
     material->hasMirror = 0;
     material->hasTransmission = 0;
     texSample(tex[0], texCoords[0], texCoords[1], material->cDiffuse);
@@ -66,13 +66,13 @@ double cameraRho = 10.0, cameraPhi = M_PI / 3.0, cameraTheta = M_PI / 3.0;
 bodyBody bodies[BODYNUM];
 
 /*bodies configurations*/
-#define MATERUNIFDIM 0
+#define MATERUNIFDIM 4
 #define GEOMUNIFDIM 1
 #define TEXNUM 1
 
 /*NEW (KB+SL): Lighting configurations*/
-double cAmbientLight[3] = {1.0, 0.0, 0.0};
-#define LIGHTNUM 1
+double cAmbientLight[3] = {1.0, 1.0, 1.0};
+#define LIGHTNUM 2
 lightLight lights[LIGHTNUM];
 double lightTheta = 0.0;
 
@@ -91,6 +91,15 @@ void getDirectionalLighting(int unifDim, const double unif[], const isoIsometry 
     lighting->distance = rayINFINITY;
     double directionalVec[3] = {0.0, 0.0, 1.0};
     isoRotateDirection(isometry, directionalVec, lighting->uLight);
+}
+
+/* NEW (KB+SL): directive for positional lighting */
+void getPositionalLighting(int unifDim, const double unif[], const isoIsometry *isometry, const double x[3], lightLighting *lighting){
+    vecCopy(3, unif, lighting->cLight);
+    double pLightMinusX[3];
+    vecSubtract(3, isometry->translation, x, pLightMinusX);
+    lighting->distance = vecLength(3, pLightMinusX);
+    vecUnit(3, pLightMinusX, lighting->uLight);
 }
 
 int initializeArtwork(void) {
@@ -115,10 +124,22 @@ int initializeArtwork(void) {
     
     
     /* NEW (KB+SL): configuring directional light and putting it into lights array*/
-    double cLightDirectional[3] = {0.0,1.0,0.0};
+    double cLightDirectional[3] = {1.0, 1.0, 1.0};
     lightInitialize(&(lights[0]), 3, getDirectionalLighting);
     isoSetRotation(&(lights[0].isometry), rot);
     lightSetUniforms(&(lights[0]), 0, cLightDirectional, 3);
+
+    /* NEW (KB+SL): configuring positional light and putting it into lights array*/
+    double cLightPositional[3] = {1.0, 0.0, 0.0};
+    double pLightPositional[3] = {0.0, 0.0, 1.0};
+    lightInitialize(&(lights[1]), 3, getPositionalLighting);
+    isoSetRotation(&(lights[1].isometry), rot);
+    isoSetTranslation(&(lights[1].isometry), pLightPositional);
+    lightSetUniforms(&(lights[1]), 0, cLightPositional, 3);
+
+
+    // NEW (KB+SL): create array for specular lighting
+    double specularArray[MATERUNIFDIM] = {1.0, 1.0, 1.0, 64.0};
 
     for(int i = 0; i < BODYNUM; i++){
         bodyInitialize(&(bodies[i]), GEOMUNIFDIM, MATERUNIFDIM, TEXNUM, sphGetIntersection, sphGetTexCoordsAndNormal, getMaterial);
@@ -129,6 +150,8 @@ int initializeArtwork(void) {
         isoSetTranslation(&(bodies[i].isometry), translations[i]);
         isoSetRotation(&(bodies[i].isometry), rot);
 
+        // NEW (KB+SL): body set material for specular light
+        bodySetMaterialUniforms(&(bodies[i]), 0, specularArray, MATERUNIFDIM);
     }
     camSetProjectionType(&camera, camPERSPECTIVE);
     camSetFrustum(
@@ -184,9 +207,12 @@ void getSceneColor(
     rayMaterial material;
     bodyGetMaterial(&(bodies[intersectedBody]), &rayFinal, texCoords, &material);
 
+    if(material.hasAmbient || material.hasDiffuse)
+        vecCopy(3, material.cDiffuse, rgb);
+
     /*NEW (KB+SL): rendering based on material received*/
     if(material.hasAmbient)
-        vecModulate(3, cAmbient, material.cDiffuse, rgb);
+        vecModulate(3, cAmbient, rgb, rgb);
     
     if(material.hasDiffuse){
         double tD[3], xyzWorld[3];
@@ -197,20 +223,23 @@ void getSceneColor(
         lightLighting lighting; 
         for(int i = 0; i < lightNum; i++){
             lightGetLighting(&(lights[i]), xyzWorld, &lighting);
-            iDiff = vecDot(3, unitNormal, lighting.uLight);
+            iDiff = fmax(0.0, vecDot(3, unitNormal, lighting.uLight));
             vecModulate(3, lighting.cLight, material.cDiffuse, modCLightCDiff);
             vecScale(3, iDiff, modCLightCDiff, diffusedLight);
             vecAdd(3, diffusedLight, totalDiffusedLight, totalDiffusedLight);
         }
         vecAdd(3, rgb, totalDiffusedLight, rgb);
+
+
     }
+
     if(material.hasSpecular){
         double tD[3], xyzWorld[3];
         vecScale(3, rayFinal.t, d, tD);
         vecAdd(3, p, tD, xyzWorld);
         //loop over every light to get the lighting effects
         double  specularLight[3], totalSpecularLight[3] = {0.0, 0.0, 0.0}, 
-        dCamera[3], uCamera[3], uReflected[3], uNormDotULight, specularCoefficient;
+        dCamera[3], uCamera[3], uReflected[3], uNormDotULight, specularCoefficient, iDiff;
 
         //calculating uCamera
         vecScale(3, -1.0, d, dCamera);
@@ -219,13 +248,27 @@ void getSceneColor(
         lightLighting lighting; 
         for(int i = 0; i < lightNum; i++){
             lightGetLighting(&(lights[i]), xyzWorld, &lighting);
-            //calculate uReflected  
+            
+            
+            iDiff = vecDot(3, unitNormal, lighting.uLight);
+
+            //calculate uReflected 
             uNormDotULight = vecDot(3, unitNormal, lighting.uLight);
             vecScale(3, uNormDotULight, unitNormal, uReflected);
             vecScale(3, 2, uReflected, uReflected);
             vecSubtract(3, uReflected, lighting.uLight, uReflected);
-    
-            specularCoefficient = pow(vecDot(3, uReflected, uCamera), bodies[intersectedBody].materUnif[3]) ;
+        
+            specularCoefficient = vecDot(3, uReflected, uCamera);    
+
+            //special case if iDiff or specularCoefficient <= 0
+            if(iDiff <= 0 || specularCoefficient <= 0){
+                specularCoefficient = 0.0;
+            }
+            else{
+                specularCoefficient = pow(specularCoefficient, bodies[intersectedBody].materUnif[3]);
+            }
+            
+      
             //NOTE: the second parameter is specularColor, it's in the first 3 uniforms of materUNIF
             vecModulate(3, lighting.cLight, &(bodies[intersectedBody].materUnif[0]), specularLight);
             vecScale(3, specularCoefficient, specularLight, specularLight);
@@ -337,7 +380,7 @@ void handleTimeStep(double oldTime, double newTime) {
     /*
     NEW (KB+SL): to rotate the light (only along the x axis though)
     */
-    double axisRotation[3] = {1.0, 0.0, 0.0}, lightRotation[3][3];
+    double axisRotation[3] = {0.57735, 0.57735, 0.57735}, lightRotation[3][3];
     mat33AngleAxisRotation(lightTheta, axisRotation, lightRotation);
     isoSetRotation(&(lights[0].isometry), lightRotation);
 
