@@ -7,9 +7,9 @@
 
 
 /* On macOS, compile with...
-    clang 690mainLight.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 690mainLights.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 690mainLight.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 690mainLights.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 #include <stdio.h>
 #include <math.h>
