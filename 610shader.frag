@@ -50,8 +50,8 @@ void main() {
     vec3 uToCamera = normalize(uToCamera);
 
     //computed reflected light for both directional and positional sources
-    vec3 uLightReflectedDirectional = (2*(uNormal * vec3(scene.uLightDirectional)) * uNormal) - vec3(scene.uLightDirectional);
-    vec3 uLightReflectedPositional = (2*(uNormal * uLightPositional) * uNormal) - uLightPositional;
+    vec3 uLightReflectedDirectional = (2* dot(uNormal, vec3(scene.uLightDirectional)) * uNormal) - vec3(scene.uLightDirectional);
+    vec3 uLightReflectedPositional = (2* dot(uNormal,uLightPositional) * uNormal) - uLightPositional;
 
     float iSpecDirectional = max(0, dot(uLightReflectedDirectional, uToCamera));
     float iSpecPositional = max(0, dot(uLightReflectedPositional, uToCamera));
