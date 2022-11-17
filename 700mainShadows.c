@@ -48,7 +48,7 @@ void getMaterial(
     material->hasAmbient = 1;
     // NEW (KB + SL): activate diffuse & specular light
     material->hasDiffuse = 1;
-    material->hasSpecular = 0;
+    material->hasSpecular = 1;
     material->hasMirror = 0;
     material->hasTransmission = 0;
     texSample(tex[0], texCoords[0], texCoords[1], material->cDiffuse);
@@ -116,8 +116,8 @@ int initializeArtwork(void) {
     double geomUnif[GEOMUNIFDIM];
     double translations[BODYNUM][3] = {
         {0.0, 0.0, 0.0},
-        {1.0, 0.0, 0.0},
-        {0.0, 1.0, 0.0},
+        {1.5, 0.0, 0.0},
+        {0.0, 1.5, 0.0},
         {0.0, 0.0, 1.5}
     };
     double rot[3][3] = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}};
@@ -131,12 +131,11 @@ int initializeArtwork(void) {
 
     /* NEW (KB+SL): configuring positional light and putting it into lights array*/
     double cLightPositional[3] = {1.0, 0.0, 0.0};
-    double pLightPositional[3] = {1.0, 0.0, 0.0};
+    double pLightPositional[3] = {1.0, 1.0, 1.0};
     lightInitialize(&(lights[1]), 3, getPositionalLighting);
     isoSetRotation(&(lights[1].isometry), rot);
     isoSetTranslation(&(lights[1].isometry), pLightPositional);
     lightSetUniforms(&(lights[1]), 0, cLightPositional, 3);
-
 
     // NEW (KB+SL): create array for specular lighting
     double specularArray[MATERUNIFDIM] = {1.0, 1.0, 1.0, 64.0};
@@ -243,17 +242,12 @@ void getSceneColor(
         for(int i = 0; i < lightNum; i++){
 
             lightGetLighting(&(lights[i]), xyzWorld, &lighting);
-
-           
-        
             /*NEW (KB+SL): check if light hits a body*/
             if(getSceneShadow(bodyNum, bodies, xyzWorld, lighting.uLight)){
                 vec3Set(0.0, 0.0, 0.0, diffusedLight);
                 vecAdd(3, diffusedLight, totalDiffusedLight, totalDiffusedLight);
             }
             else{
-                if(i == 1)
-                    printf("here:\n");
                 iDiff = fmax(0.0, vecDot(3, unitNormal, lighting.uLight));
                 vecModulate(3, lighting.cLight, material.cDiffuse, modCLightCDiff);
                 vecScale(3, iDiff, modCLightCDiff, diffusedLight);
