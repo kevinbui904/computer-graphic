@@ -131,7 +131,7 @@ int initializeArtwork(void) {
 
     /* NEW (KB+SL): configuring positional light and putting it into lights array*/
     double cLightPositional[3] = {1.0, 0.0, 0.0};
-    double pLightPositional[3] = {0.0, 0.0, 1.0};
+    double pLightPositional[3] = {0.57735, 0.57735, 0.57735};
     lightInitialize(&(lights[1]), 3, getPositionalLighting);
     isoSetRotation(&(lights[1].isometry), rot);
     isoSetTranslation(&(lights[1].isometry), pLightPositional);
@@ -209,6 +209,8 @@ void getSceneColor(
 
     if(material.hasAmbient || material.hasDiffuse)
         vecCopy(3, material.cDiffuse, rgb);
+    else
+        vec3Set(0.0, 0.0, 0.0, rgb);
 
     /*NEW (KB+SL): rendering based on material received*/
     if(material.hasAmbient)
@@ -388,7 +390,7 @@ void handleTimeStep(double oldTime, double newTime) {
 }
 
 int main(void) {
-    if (pixInitialize(SCREENWIDTH, SCREENHEIGHT, "670mainBody") != 0)
+    if (pixInitialize(SCREENWIDTH, SCREENHEIGHT, "680mainLight") != 0)
         return 1;
     if (initializeArtwork() != 0) {
         pixFinalize();
