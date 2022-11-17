@@ -7,9 +7,9 @@
 
 
 /* On macOS, compile with...
-    clang 680mainLight.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 690mainLight.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 680mainLight.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 690mainLight.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 #include <stdio.h>
 #include <math.h>
@@ -45,7 +45,7 @@ void getMaterial(
         const rayIntersection *inter, const double texCoords[2], 
         rayMaterial *material){
     /*This is very specific to Day 24 work*/
-    material->hasAmbient = 1;
+    material->hasAmbient = 0;
     // NEW (KB + SL): activate diffuse & specular light
     material->hasDiffuse = 0;
     material->hasSpecular = 1;
@@ -71,8 +71,8 @@ bodyBody bodies[BODYNUM];
 #define TEXNUM 1
 
 /*NEW (KB+SL): Lighting configurations*/
-double cAmbientLight[3] = {1.0, 1.0, 1.0};
-#define LIGHTNUM 1
+double cAmbientLight[3] = {0.25, 0.25, 0.25};
+#define LIGHTNUM 2
 lightLight lights[LIGHTNUM];
 double lightTheta = 0.0;
 
@@ -91,6 +91,15 @@ void getDirectionalLighting(int unifDim, const double unif[], const isoIsometry 
     lighting->distance = rayINFINITY;
     double directionalVec[3] = {0.0, 0.0, 1.0};
     isoRotateDirection(isometry, directionalVec, lighting->uLight);
+}
+
+/* NEW (KB+SL): directive for positional lighting */
+void getPositionalLighting(int unifDim, const double unif[], const isoIsometry *isometry, const double x[3], lightLighting *lighting){
+    vecCopy(3, unif, lighting->cLight);
+    double pLightMinusX[3];
+    vecSubtract(3, isometry->translation, x, pLightMinusX);
+    lighting->distance = vecLength(3, pLightMinusX);
+    vecUnit(3, pLightMinusX, lighting->uLight);
 }
 
 int initializeArtwork(void) {
@@ -119,6 +128,15 @@ int initializeArtwork(void) {
     lightInitialize(&(lights[0]), 3, getDirectionalLighting);
     isoSetRotation(&(lights[0].isometry), rot);
     lightSetUniforms(&(lights[0]), 0, cLightDirectional, 3);
+
+    /* NEW (KB+SL): configuring positional light and putting it into lights array*/
+    double cLightPositional[3] = {1.0, 0.0, 0.0};
+    double pLightPositional[3] = {0.57735, 0.57735, 0.57735};
+    lightInitialize(&(lights[1]), 3, getPositionalLighting);
+    isoSetRotation(&(lights[1].isometry), rot);
+    isoSetTranslation(&(lights[1].isometry), pLightPositional);
+    lightSetUniforms(&(lights[1]), 0, cLightPositional, 3);
+
 
     // NEW (KB+SL): create array for specular lighting
     double specularArray[MATERUNIFDIM] = {1.0, 1.0, 1.0, 64.0};
