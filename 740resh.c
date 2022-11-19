@@ -40,8 +40,48 @@ void reshGetIntersection(
         int unifDim, const double unif[], const void *data, 
         const isoIsometry *isom, const double p[3], const double d[3], 
         double bound, rayIntersection* inter) {
-    meshMesh *mesh = (meshMesh *)data;
-    /* YOUR CODE GOES HERE. (MINE IS 22 LINES WITH A BIG HELPER FUNCTION.) */
+        meshMesh *mesh = (meshMesh *)data;
+        /*NEW (KB+SL): setting inter to rayNone and index -1 to detect misses later*/
+        inter->t = rayNONE;
+        inter->t = -1;
+
+        /*NEW (KB+SL): transform p and d into local coordinates*/
+        double pLocal[3], dLocal[3];
+        isoUnrotateDirection(isom, d, dLocal);
+        isoUntransformPoint(isom, p, pLocal);
+
+        /*NEW (KB+SL): need to check ALL triangles in the mesh*/
+        double *vertices[3], bMinusA[3], cMinusA[3], normal[3], x[3],
+                aMinusP[3], td[3], pq[2];
+        int *triPointer;
+
+        for(int triNumber = 0; triNumber < mesh->triNum; triNumber += 1){
+            triPointer = meshGetTrianglePointer(mesh, triNumber);
+            for(int i = 0; i < 3; i += 1){
+                vertices[i] = meshGetVertexPointer(mesh, triPointer[i]);
+            } 
+            //compute the normal
+            vecSubtract(3, vertices[1], vertices[0], bMinusA);
+            vecSubtract(3, vertices[2], vertices[0], cMinusA);
+            vec3Cross(bMinusA, cMinusA, normal);
+
+            //compute t
+            vecSubtract(3, vertices[0], pLocal, aMinusP);
+            double normalDotD = vecDot(3, normal, dLocal);
+            if(normalDotD != 0){
+                double t = vecDot(3, normal, aMinusP) / vecDot(3, normal, dLocal);
+                if (t <= bound && t >= rayEPSILON){
+                    //check if we hit triangle
+                    vecScale(3, t, dLocal, td);
+                    vecAdd(3, pLocal, td, x);
+                    reshGetPQ(vertices[0], bMinusA, cMinusA, x, pq);
+                    if (pq[0] >= 0 && pq[1] >= 0 && pq[0]+pq[1] <= 1){
+                        inter->t = t;
+                        inter->index = triNumber;
+                    }
+                }
+            }
+        }
 }
 
 /* An implementation of getTexCoordsAndNormal for bodies that are reshes. 

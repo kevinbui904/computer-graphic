@@ -7,11 +7,12 @@
 
 
 /* On macOS, compile with...
-    clang 730mainMeshes.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
+    clang 740mainMeshes.c 040pixel.o -lglfw -framework OpenGL -framework Cocoa -framework IOKit
 On Ubuntu, compile with...
-    cc 730mainMeshes.c 040pixel.o -lglfw -lGL -lm -ldl
+    cc 740mainMeshes.c 040pixel.o -lglfw -lGL -lm -ldl
 */
 #include <stdio.h>
+#include <stdlib.h>
 #include <math.h>
 #include <GLFW/glfw3.h>
 #include "040pixel.h"
@@ -21,8 +22,8 @@ On Ubuntu, compile with...
 #include "300isometry.c"
 #include "300camera.c"
 #include "730ray.c"
-#include "250mesh3D.c"
 #include "730mesh.c"
+#include "250mesh3D.c"
 
 /*NEW (KB+SL): used to intialize textures*/
 #include "150texture.c"
@@ -31,6 +32,7 @@ On Ubuntu, compile with...
 #include "730body.c"
 #include "730sphere.c"
 #include "730planes.c"
+#include "740resh.c"
 /* NEW (KB+SL): for light effects*/
 #include "680light.c"
 
@@ -80,8 +82,9 @@ double cameraRho = 10.0, cameraPhi = M_PI / 3.0, cameraTheta = M_PI / 3.0;
 /* Four spheres. */
 #define SPHERENUM 4
 #define PLANENUM 1
-#define BODYNUM 5
-bodyBody bodies[SPHERENUM + PLANENUM];
+#define RESHNUM 1
+#define BODYNUM (SPHERENUM + PLANENUM + RESHNUM)
+bodyBody bodies[SPHERENUM + PLANENUM + RESHNUM];
 
 /*bodies configurations*/
 #define MATERUNIFDIM 4
@@ -103,6 +106,8 @@ double unif[UNIFDIM];
 texTexture texture;
 texTexture *textures[1] = {&texture};
 
+/*NEW (KB+SL): mesh*/
+meshMesh mesh1;
 /* NEW (KB+SL): directive for directional lighting */
 void getDirectionalLighting(int unifDim, const double unif[], const isoIsometry *isometry, const double x[3], lightLighting *lighting){
     vecCopy(3, unif, lighting->cLight);
@@ -147,7 +152,7 @@ int initializeArtwork(void) {
         printf("unable to initialize texture\n");
         return 2;
     }
-
+    
     /* NEW (KB+SL): initializing bodies to be spheres*/
     //NOTE: the radii is made like this because of how bodySetGeometryUniform is configured
     double radii[SPHERENUM][1] = {{1.0}, {0.5}, {0.5}, {0.5}};
@@ -206,6 +211,19 @@ int initializeArtwork(void) {
     bodySetTexture(&(bodies[4]), 0, textures[0]);
     isoSetTranslation(&(bodies[4].isometry), planeTranslation);
 
+    /* NEW (KB+SL): configuring the 6th body to be a resh*/
+    double reshTranslation[3] = {-2.0, 1.5, 0.0};
+    if (mesh3DInitializeBox(&mesh1, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0) != 0)
+    {
+        printf("unable to initialize box mesh\n");
+        return 3;
+    }
+    bodyInitialize(&(bodies[5]), reshUNIFDIM, reshUNIFDIM, TEXNUM, reshGetIntersection, reshGetTexCoordsAndNormal, getPhongMaterial);
+    bodySetTexture(&(bodies[5]), 0, textures[0]);
+    bodySetGeometryData(&(bodies[5]), &mesh1);
+    isoSetTranslation(&(bodies[5].isometry), reshTranslation);
+    
+
     camSetProjectionType(&camera, camPERSPECTIVE);
     camSetFrustum(
         &camera, M_PI / 6.0, cameraRho, 10.0, SCREENWIDTH, SCREENHEIGHT);
@@ -221,6 +239,9 @@ void finalizeArtwork(void) {
     for(int k = 0; k < LIGHTNUM; k++){
         lightFinalize(&(lights[k]));
     }
+    
+    //technically we could've created a meshMesh array...but oh well
+    meshFinalize(&mesh1);
     return;
 }
 
@@ -451,7 +472,7 @@ void handleTimeStep(double oldTime, double newTime) {
     double rotAxis[3] = {1.0 / sqrt(3.0), 1.0 / sqrt(3.0), 1.0 / sqrt(3.0)};
     double rotMatrix[3][3];
     mat33AngleAxisRotation(newTime, rotAxis, rotMatrix);
-    for (int k = 0; k < BODYNUM-1; k += 1)
+    for (int k = 0; k < BODYNUM-2; k += 1)
         isoSetRotation(&(bodies[k].isometry), rotMatrix);
     
     /*
