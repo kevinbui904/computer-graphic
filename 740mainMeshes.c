@@ -213,7 +213,7 @@ int initializeArtwork(void) {
 
     /* NEW (KB+SL): configuring the 6th body to be a resh*/
     double reshTranslation[3] = {-2.0, 1.5, 0.0};
-    if (mesh3DInitializeBox(&mesh1, -1.0, 1.0, -1.0, 1.0, -1.0, 1.0) != 0)
+    if (mesh3DInitializeCapsule(&mesh1, 0.5, 2.0, 3, 3) != 0)
     {
         printf("unable to initialize box mesh\n");
         return 3;
@@ -270,6 +270,9 @@ void getSceneColor(int recDepth,
             intersectedBody = i;
             bound = ray.t;
             rayFinal.t = ray.t;
+            /*NEW: this is for meshes, since we now have a triangle index, we need to 
+            use it. If it's not a mesh, the index would never be used so we should be ok*/
+            rayFinal.index = ray.index;
         }
     }
     if(bound == rayINFINITY){

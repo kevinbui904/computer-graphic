@@ -49,12 +49,10 @@ void reshGetIntersection(
         double pLocal[3], dLocal[3];
         isoUnrotateDirection(isom, d, dLocal);
         isoUntransformPoint(isom, p, pLocal);
-
         /*NEW (KB+SL): need to check ALL triangles in the mesh*/
         double *vertices[3], bMinusA[3], cMinusA[3], normal[3], x[3],
                 aMinusP[3], td[3], pq[2];
         int *triPointer;
-
         for(int triNumber = 0; triNumber < mesh->triNum; triNumber += 1){
             triPointer = meshGetTrianglePointer(mesh, triNumber);
             for(int i = 0; i < 3; i += 1){
@@ -64,7 +62,6 @@ void reshGetIntersection(
             vecSubtract(3, vertices[1], vertices[0], bMinusA);
             vecSubtract(3, vertices[2], vertices[0], cMinusA);
             vec3Cross(bMinusA, cMinusA, normal);
-
             //compute t
             vecSubtract(3, vertices[0], pLocal, aMinusP);
             double normalDotD = vecDot(3, normal, dLocal);
@@ -92,9 +89,39 @@ void reshGetTexCoordsAndNormal(
         const isoIsometry *isom, const double p[3], const double d[3], 
         const rayIntersection *inter, double texCoords[2], double normal[3]) {
     meshMesh *mesh = (meshMesh *)data;
-    /* REPLACE THESE THREE LINES WITH YOUR CODE. (MINE IS 17 LINES.) */
-    texCoords[0] = 0.5;
-    texCoords[1] = 0.5;
-    vec3Set(0.0, 0.0, 1.0, normal);
+
+    /*NEW (KB+SL): transform p and d into local coordinates*/
+    double pLocal[3], dLocal[3];
+    isoUnrotateDirection(isom, d, dLocal);
+    isoUntransformPoint(isom, p, pLocal);
+
+    /* NEW (KB+SL): compute necessary vectors from winning triangle*/
+     double *vertices[3], bMinusA[mesh->attrDim], cMinusA[mesh->attrDim], 
+            x[3], td[3], pq[2], chi[mesh->attrDim], pBMinusA[mesh->attrDim], 
+            qCMinusA[mesh->attrDim];
+    int *triPointer;
+    triPointer = meshGetTrianglePointer(mesh, inter->index);
+    for(int i = 0; i < 3; i += 1){
+        vertices[i] = meshGetVertexPointer(mesh, triPointer[i]);
+    }
+    //compute pq
+    vecSubtract(mesh->attrDim, vertices[1], vertices[0], bMinusA);
+    vecSubtract(mesh->attrDim, vertices[2], vertices[0], cMinusA);
+    vecScale(3, inter->t, dLocal, td);
+    vecAdd(3, pLocal, td, x);
+    reshGetPQ(vertices[0], bMinusA, cMinusA, x, pq);
+
+    //linear interpolate
+    vecScale(mesh->attrDim, pq[0], bMinusA, pBMinusA);
+    vecScale(mesh->attrDim, pq[1], cMinusA, qCMinusA);
+    vecAdd(mesh->attrDim, vertices[0], pBMinusA, chi);
+    vecAdd(mesh->attrDim, chi, qCMinusA, chi);
+
+    //extracting the interpolated values
+    double localNormal[3];
+    vecUnit(3, &(chi[5]), localNormal);
+    isoRotateDirection(isom, localNormal, normal);
+    texCoords[0] = chi[3];
+    texCoords[1] = chi[4];
 }
 
